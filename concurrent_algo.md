@@ -13,9 +13,7 @@
     2.5. M-Valued SRSW <ins>Regular</ins> -> M-Valued SRSW <ins>Atomic</ins>  
     2.6. M-Valued <ins>SRSW</ins> Atomic -> M-Valued <ins>MRSW</ins> Atomic  
     2.7. M-Valued <ins>MRSW</ins> Atomic -> M-Valued <ins>MRMW</ins> Atomic
-3. The Power & Limitation of Registers
-4. Universal Objects & Synchronization Number
-5. Transactional Memory
+3. ...
 
 # 1. Introduction  
 
@@ -548,7 +546,7 @@ Since Consensus cannot be implemented using only registers, and by the fact that
 
 ## 4.3 Queue
 
-The Queue is an object containter with two operations: `enq()` and `deq()`. It is a FIFO data structure that you can learn about on internet. Can we implement an atomic wait-free Queue using only registers ? No, because we can implement Consensus using a Queue and registers.  
+The Queue is an object containter with two operations: `enq(v)` and `deq()`. It is a FIFO data structure that you can learn about on internet. Can we implement an atomic wait-free Queue using only registers ? No, because we can implement Consensus using a Queue and registers.  
 The algorithm is as follows: it uses two regisers r0 and r1, and a Queue q initialized to {"winner", "loser"}.
 
 ```java
@@ -629,3 +627,205 @@ int propose(int v) { // Called by pi
     else return val;
 }
 ```
+
+# 5. Universal Construction
+
+We've seen in the previous section that we can't implement any object in our concurrent context using only registers. Is there a stronger object that can be used to implement any object in our concurrent context ?
+This first requires to define what object we're looking for.
+
+<u>*Universality:*</u> An object T is *universal* if, together with registers, instances of T can be used to provide a wait-free linearizable implementation of any other object T'.  
+
+In the previous section we proved that in our concurrent context Consensus is impossible to implement using only registers. But we can ask ourselves, if we are able to implement Consensus, would there still be any object that would be impossible to implement in our concurrent context ? The answer is in fact no. Consensus is the strongest possible object in our concurrent context, and so Consensus is universal.  
+In this section, we demonstrate the power of Consensus in implementing any wait-free atomic object. To this end, we implement an algorithm that builds any wait-free atomic object T', using only registers and instances of Consensus. 
+
+*Before we continue, note that since Consensus is universal, then every objects that we presented in the previous section (Fetch&Inc, Compare&Swap, ...) are universal.*  
+
+## 5.1 Deterministic case
+
+To simplify the explanations and the algorithm, we first concentrate only on **deterministic** objects. We will see later how we can modify the algorithm presented to make it work for general (deterministic and non-deterministic) objects.  
+
+First we list the building blocks of the algorithm.  
+* The object we want to implement using the algorithm is T'. For example, think of it as a Queue.
+* The operations used in the algorithm are `read()`, `write()`, and `propose()`.
+* Each process has its own copy of T'. Think of this as each process has its own instance, but instances communicate with eachother.
+* Instances communicate with eachother through registers and consensus objects.
+* Processes share an array of N MRSW registers called `REQ` (N being the number of processes). 
+* Processes share an array of Consensus instances `CONS` (of possibly infinite size, actually the size of the number of total requests made to the object at the end of execution).
+* Each process has its own local data structures: a list `PERF` storing requests that the process has performed, and a list `INV` of requests that the process still needs to perform. We explain what this is later.
+* Note that every requests are uniquely identified
+
+Now, the algorithm goes as follows.
+* `REQ` is used to inform all processes about which requests need to be performed. Whenever pi has a new request (via a function of T'), pi adds the request to `REQ[i]`. The other processes will be able to see that request, and will perform it as well on their side (on their local copies of T'). This will help linearize all the different requests different processes get. 
+* To ensure linearizability of the requests, every process must perform the requests in the same order. This is where `CONS` comes into play. It enables every processes to treat the requests in the same order. Each time they must treat a request, they go into a new round r, and they decide which request is treated at round r with `CONS[r]`.
+* Note that pi waits for `REQ[i]` to be performed before treating a new request coming at it. That way request in `REQ[i]` is not overwritten until it was performed. The algorithm is still wait-free because `REQ[i]` is eventually performed so the next request is eventually treated.
+* Thus, `REQ` and `CONS` are combined to ensure that 1. every request invoked is performed and a result is eventually returned 2. requests are executed in the same total order at all processes (linearization) 3. this order 
+preserves the real-time order of requests that are made to the same process. For example, for the Queue, the order will decide which [`enq(5)` from p0] or [`enq(8)` from p1] goes first, but both will be done by p0 and p1 on their local copy of the Queue.
+* Periodically, pi goes through `REQ` and for all j in [N], appends `REQ[j]` at the end of `INV` if it is not in `PERF`. `INV` is the (ordered) list of pending requests made to all processes, it should not contain a request that has already been performed.
+* If `INV` is not empty and we are at round r, pi proposes `INV[0]` to `CONS[r]`. Once `CONS[r]` returns with request v, r is incremented, pi adds v to `PERF`, removes v from `INV`, and performs v. If v = `REQ[i]`, pi returns the result of performing v, and `REQ[i]` can be overwritten.
+* The algorithm can be modified so that Consensus works with an ordered list of requests instead of a single request. For example, when requests are made to pi, they are added (in order) into `REQ[i]` which is now a list, and then this list is added into `INV`. This removes the need to wait for `REQ[i]` to be performed to prevent from overwritting it.
+
+The two key points of the algorithm are 
+1. every process performs locally every requests made, no matter from which process the request came from in the beginning (job done with registers).
+2. all of the requests are ordered and this order is the same for every processes (job done with Consensus).  
+
+*You should convince yourself of the correctness of the algorithm. [wait-freedom], [linearizability/total-order], [valid per-process order] need to be proved.*
+
+Note that this algorithm only works for deterministic objects.  
+An object is deterministic if, for any request R there exists a single response S associated with that request. For non-deterministic objects, for a request R there exists a set of possible responses {S1, S2, ...} for R. A good example of deterministic object vs non-deterministic object is list vs set: a list guarantees an ordering of elements according to the time elements were added, whereas a set doesn't guarantee any order.  
+One can see that the algorithm doesn't work if we consider T' to be a set. If T' is a set, then removing at a certain index in the set might behave differently from process to process because there is no defined order.  
+  
+## 5.2 General (Deterministic and Non-Deterministic) Case
+
+There exist adaptations to our algorithm so that it still works for non-deterministic objects.  
+One adaptation is to "restrict" the non-deterministic object to a deterministic one, i.e. we add a constraint (an ordering) in our algorithm such that for a request R, instead of having the processes give potential different responses from the set {S1, S2, ...}, they give the same response according to the constraint (the ordering), say S1. This is a valid restriction because the response given by the processes is a valid response, i.e. it still comes from the set of possible responses {S1, S2, ...} for the given request R. For example, in the case of the set, the constraint could be to add an ordering of the elements in the set, so that the set behaves as a list when accessing elements in it.  
+Another different adaptation is to modify what we propose to a Consensus instance. Instead of just proposing the request, pi first performs the request and then proposes the pair (request, response). That way processes agree on request R, and uppon request R, they also agree on which response to return from the set {S1, S2, ...}. 
+
+We've just implemented an algorithm that implements any wait-free atomic object T' using only registers and Consensus :)
+
+# 6. Implementing the Consensus Object with Timing Assumptions
+
+We've seen that Consensus, in a completely asynchronous setting, is impossible to implement. But in practice, it is reasonable to assume some timing assumptions that are true at some point. In practice, concurrent systems are usually synchronous, and only sometimes asynchronous.  
+In this section, we implement a weaker version of Consensus, in that it assumes a timing assumption on our system.  
+
+The way we proceed is we divide Consensus into modular parts:
+1. We implement *Wait-free Consensus (Consensus)* through *Lock-free Consensus (L-Consensus)* and *Registers*.
+1. We implement *L-Consensus* through *Obstruction-free Consensus (O-Consensus)* and *Enventual Leader Election (<>Leader)*.  
+
+<u>**Consensus:**</u>
+* **Wait-free termination**: If a correct process proposes, then it eventually decides (every process progresses)
+* Agreement: No two processes decide differently
+* Validity: Any value decided must have been proposed
+
+<u>**L-Consensus:**</u>
+* **Lock-free termination**: If a correct process proposes, then *at least one* correct process eventually decides (there is some progression in the system)
+* Agreement: same as Consensus agreement
+* Validity: same as Consensus validity
+
+<u>**O-Consensus:**</u>
+* **Obstruction-free termination**: If a correct process proposes and *eventually executes alone*, then the process eventually decides
+* Agreement: same as Consensus agreement
+* Validity: same as Consensus validity
+
+<u>**<>Leader:**</u>
+* Completeness: If a correct process invokes `leader()`, then the invocation returns and *eventually*, some correct process is *permanently* the only leader
+
+## 6.1 O-Consensus
+
+Now we start by implementing O-Consensus. We want to make sure that a process that is eventually "left alone" to execute steps, eventually decides. Of course we also want agreement and validity to hold. The building blocks of the algorithm are:
+* Assume N processes
+* Each process pi maintains a local timestamp `ts`, initialized to i and incremented by N
+* Processes share an array of MRSW atomic register pairs `Reg` of size N. Element i of the array contains `Reg[i].T`, a timestamp initialized to 0, and `Reg[i].V`, a pair (value,timestamp) initialized to (null, 0). Assume that we work with values of type P.
+* Intuitively, processes will execute multiple rounds and they will use these registers to communicate with each other and preserve validity and agreement. On top of that, if a process executes alone, it will be able to decide v, and later the other processes will agree on v.  
+
+To simplify, we assume the following two functions applied to `Reg`:
+```java
+/* Returns the highest timestamp among all elements of Reg[1,..,N].T */
+int highestTsp() {
+    return max{Reg[i].T for(i=0; i<N; ++i)};
+}
+
+/* Returns the value with the highest timestamp among all elements of Reg[1,..,N].V */
+P highestTspValue() {
+    int j = argmax{Reg[i].V.timestamp for(i=0; i<N; ++i)};
+    return Reg[j].V.value;
+}
+```
+Here is the algorithm:
+
+```java
+// Point of view of process pi
+int ts = i;
+
+P propose(P v) {
+    while(true) {
+        Reg[i].T.write(ts);                 (1)
+        P val = Reg.highestTspValue();      (2)
+        if(val == null)
+            val = v;
+        Reg[i].V.write(val, ts);            (3)
+        if(ts == Reg.highestTsp())          (4)
+            return val;
+        ts = ts + N;
+    }
+}
+```
+* (1): pi announces its timestamp
+* (2): pi selects the value with the highest timestamp (or its own if there is none)
+* (3): pi announces the value it selected with its timestamp
+* (4): if pi's timestamp is the highest (meaning no other process entered (1) after pi), then pi can decide (pi knows that once it decided, any process that executes (2) will select pi's selected value).
+
+## 6.2 L-Consensus
+
+In this part, we implement L-Consensus using <>Leader and O-Consensus. <>Leader is the subject of the next subsection.  
+The idea is to use <>Leader to make sure that, eventually, one process keeps executing steps alone, until it decides. The difference with O-Consensus is that in O-Consensus we assume this will arrive eventually, whereas in L-Consensus we have no guarantees that it will arrive, so we force it.
+
+Assume for now that <>Leader is provided and is a black box. The operation it provieds is `leader()` which returns a boolean. A process considers itself leader if the boolean is true. <>Leader verifies its property defined in the begining of the section.  
+
+The algorithm proceeds similarly as in algorithm for O-Consensus. It uses the same building blocks, and the only difference is that `leader()` is used to make sure that eventually the code block inside the while loop is executed by a single process: the leader.
+
+```java
+// Point of view of process pi
+int ts = i;
+
+P propose(P v) {
+    while(true) {
+        if(leader()) {                      (*)
+            Reg[i].T.write(ts);                 
+            P val = Reg.highestTspValue();      
+            if(val == null)
+                val = v;
+            Reg[i].V.write(val, ts);            
+            if(ts == Reg.highestTsp())          
+                return val;
+            ts = ts + N;
+        }
+    }
+}
+```
+The only change from O-Consensus algorithm is (*).  
+
+## 6.3 Consensus
+
+Assuming we have the <>Leader object, the algorithm for L-Consensus makes sure that eventually at least one process decides. To get Consensus, we want that all processes eventually decides. So to implement Consensus from L-Consensus, we can add a shared register R, that is used to display the decided value once a process decides from L-Consensus.  
+Let p be a process that eventually decides from L-Consensus. p exists because at least one process eventually decides. Let R be the shared register, initialy containing null. Once p has decided v, p writes v into R. Periodically, every processes read R. If the value read is not null, then they can decide this value.  
+
+```java
+// Point of view of process pi
+int ts = i;
+
+P propose(P v) {
+    while(R.read() == null) {               (*)
+        if(leader()) {                      
+            Reg[i].T.write(ts);                 
+            P val = Reg.highestTspValue();      
+            if(val == null)
+                val = v;
+            Reg[i].V.write(val, ts);            
+            if(ts == Reg.highestTsp())          
+                return val;
+            ts = ts + N;
+        }
+    }
+    return R.read();                        (**)
+}
+```
+The only changes from L-Consensus algorithm are (*) and (**).
+
+This enforces the constraint that, once a process has decided, eventually, all the other correct processes decide. Since by L-Consensus there is eventually one process that decides, then eventually every correct process decides.
+
+
+## 6.4 <>Leader
+
+Finally, it remains to implement <>Leader. We state again its property:
+* Completeness: If a correct process invokes `leader()`, then the invocation returns and *eventually*, some correct process is *permanently* the only leader
+
+Note that we didn't yet use our timing assumption.  
+As stated in L-Consensus part, the operation it provides is `leader()` which returns a boolean. A process considers itself leader if the boolean is true. Note that `leader()` can return true for multiple processes, the only guarantee is that eventually it returns true for a single process. This is where our timing assumption comes into play. 
+
+We assume that the system is eventually synchronous:
+* There is a time after which there is a lower and an upper bound on the delay for a process to execute a local action, a read, or a write in shared memory.
+* The time after which the system becomes synchronous is called the global stabilitzation time (GST). It is unknown to the processes.
+
+Let's look at the building blocks for the algorithm of <>Leader:
+- check : the end of the period where I might revise my jugement about who is the leader
+- clock is somthing that measures time
