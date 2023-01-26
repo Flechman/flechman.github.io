@@ -827,5 +827,59 @@ We assume that the system is eventually synchronous:
 * The time after which the system becomes synchronous is called the global stabilitzation time (GST). It is unknown to the processes.
 
 Let's look at the building blocks for the algorithm of <>Leader:
-- check : the end of the period where I might revise my jugement about who is the leader
-- clock is somthing that measures time
+* General rule: each process pi elects (locally) the process with the lowest identity that pi considers as non-crashed. So if pi elects pj, then j <= i.
+* `REG` is an array of MRSW registers of size N (the number of processes), all initialized to 0. If pi considers itself to be the leader, then pi will periodically increment `REG[i]`. This helps indicate to each pj with j >= i that pi is non-crashed and ready to be the leader. Eventually, only the unique leader keeps incrementing its `REG[i]`.
+* Each pi has local variables `clock`, `check`, and `delay`. `clock` is used to help pi measure time (initialized to 0), `check` is the time at which pi might revise its jugement about who is the leader (initialized to 1), and `delay` is the delay between each time pi decides to revise its jugement (initialized to 1). They are all linked, this will be made clear when reading the algorithm.
+* Each pi also has a local array `last` of size N (all initialized to 0), to record the last values of `REG` pi read. If `REG[j]-last[j]>0`, then pi knows pj is non-crashed and is ready to be the leader.
+* The next leader pi chooses is the one with the smallest process id (less than i) that is non-crashed and ready to be the leader, or itself if no id smaller than i is ready.
+
+We present the algorithm as being an object that has its own thread once created.
+```java
+// Code executed by pi
+
+int self;
+int leader = 1;
+int check = 1;
+int delay = 1;
+int[] last = new int[N];
+
+boolean leader() {
+    return leader == self;
+}
+
+Leader(int i) { // Called by pi
+    self = i;
+    int clock = 0;
+    while(true) {
+        if(leader == self)
+            REG[i].write(REG[i].read()+1);
+        clock = clock + 1;
+        if(clock == check)
+            elect();
+    }
+}
+
+void elect() {
+    boolean foundLeader = false;
+    int j = 0;
+    while(!foundLeader && j<self) {
+        if(REG[j].read() - last[j] > 0) {
+            foundLeader = true;
+            last[j] = REG[j].read();
+            if(leader != j)                 (*)
+                delay = delay*2;
+            leader = j;
+        }
+        ++j;
+    }
+    check = check + delay;
+    if(!foundLeader)
+        leader = self;
+}
+```
+* The first thing to understand is that pi will call `elect()` every `delay` time. During this delay, another process pj can have the time to increment its `REG[j]` if it thinks it can be leader and it is non-crashed. But pj might be too slow to increment relative to pi's `delay`. So later, when pi realizes this (with (*)), it will lengthen its `delay` value, giving eventually enough time for pj to increment. 
+* Since our time assumption says that eventually we have a bound on the time pj takes to do an operation, pi's `delay` will eventually grow until being larger than this bound, and pi will eventually always detect the increment in `REG[j]`.
+* So eventually, pi detects every increment `REG[j]` such that pj thinks it can be leader and it is non-crashed. More generally, every processes eventually detect any increments in `REG`. Since they will choose the smallest j such that pj made an increment, they will eventually choose the same leader. This leader will permanently be the only leader.
+* Last observation: `clock` is the time relative to how fast pi executes instructions, so when the algorithm converges to a single leader, processes might get different values of `delay`.
+
+# 7. Transactional memory
