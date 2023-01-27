@@ -883,3 +883,189 @@ void elect() {
 * Last observation: `clock` is the time relative to how fast pi executes instructions, so when the algorithm converges to a single leader, processes might get different values of `delay`.
 
 # 7. Transactional memory
+
+Transactions are a sequence of operations that we want to execute as if they were a single atomic operation. We roughly want 
+
+```java
+atomic {
+    operation 1;
+    operation 2;
+    ...
+}
+```
+
+Transactional memory has been a very hot topic in concurrent systems, and it is used in critical parts of some of the most common systems used in industry, for example database systems.  
+The properties of transactional memory are:  
+* Snapshot isolation: 
+    1. No write in any non-commited transaction can become accessible in any other transaction.
+    2. All the reads and writes made in a transaction appear to be made from the same atomic snapshot of the shared memory
+    3. A transaction observes its own modifications of memory
+* Atomicity: All the reads and writes of any committed transaction seem to have all happened at one indivisible point in time, i.e. the committed transactions are linearizable.
+* Consistency: Each read made by a committing transaction in its snapshot would read the same value in a snapshot taken after the last committed transaction.
+
+The transactional memory API is very simple:
+* `begin()`: begins the transaction
+* `read()`: reads memory and returns the value read, or aborts
+* `write()`: writes in memory, or aborts
+* `commit()`: commits the transaction if possible (validates it), or aborts
+* `abort()`: aborts the transaction
+
+`begin` and `commit` (or `abort`) are the opening and closing brackets of our example above. From the point of view of the user of the API (the programmer), the underlying logic is abstracted away.  
+
+To (easily) implement transactions with locks, you can have a global lock, and each time there is a transaction, it acquires the lock in `begin` and then releases the lock in `commit`. When the lock is taken, other transactions must wait.  
+To be more efficient, we can change the granularity of locking by having the lock at each memory space, and each time a transaction wants to read or write at this space it aquires the lock. This is a bit better as transactions that work on disjoint memory spaces can execute in parallel and there is no need for waiting. Of course if their memory acceses are not disjoint then a transaction might wait for the other. This case can even be worse, as we can get a deadlock (t1 locks m1, t2 locks m2; now t1 wants to lock m2 and t2 wants to lock m1). This is why `abort`ing is useful (or clever), it will enable us to avoid deadlocks. When a transaction aborts, it tries again.  
+
+## 7.1 Two-Phase Locking
+
+Two-phase locking encapsulates this idea of locking per memory space or per object, and unlock at commit time. In what follows we consider the granularity to be on the memory space, but on objects it would be similar.
+
+More formally 
+* Every memory space M with state s(M) (a register), is protected by a lock l(M) (a compare&swap c&s). Initially, l(M) is unlocked.  
+* A transaction has local variables `wSet` (list) and `wLog` (map), initially empty. They are used to keep track of the changes we made to memory to undo these changes in case we need to abort.  
+
+Two-phase locking goes as follows (rough pseudocode)
+
+```
+Upon begin() {
+    wSet = empty List
+    wLog = empty Map
+}
+
+Upon op is read() or write(v) on memory M {
+    if (M not in wSet) {
+        lock M with l(M).c&s(unlocked, locked)
+        abort() if M was already locked
+        wSet.append(M)
+        wLog.put(M, s(M).read())
+    }
+    if(op is read()) return s(M).read()
+    else s(M).write(v)
+}
+
+Upon commit() {
+    for all M in wSet, l(M).write(unlocked)
+}
+
+Upon abort() {
+    for all M in wSet, s(M).write(wLog.get(M))
+    commit()
+}
+```
+* In `commit()` we unlock all memory regions we've locked (i.e. accessed)
+* In `abort()` we undo the changes we potentially made to the memory regions we accessed, before unlocking them.
+
+We call it Two-phase locking because we first lock during the read and write phase, and we unlock all the memory regions we accessed during commit phase.  
+Although it would make the algorithm more efficient by allowing more concurrency, we cannot unlock just after we finished reading or writing, as this could create cases where we violate atomicity. See the example below
+
+![Two-phase locking unlock after operation wrong](twophase_locking_wrong.png)
+
+This execution is not linearizable. If T1 goes first, it writes 1 in M2 so T2 should read 1 in T2. If T2 goes first it's the same scenario for M1. This execution can happen if we unlock right after finishing the operation.
+
+In practice, it is observed that most of the activities of transactions are related to reading (numbers go from 90% to 99%). So we can improve our Two-phase locking algorithm to enable multiple concurrent reads in a same memory space.  
+To do this, we change our lock into a read-write lock: 
+* Any read acquires the read-lock, and any write acquires the write-lock. 
+* If T writes to M, T tries to acquire the write-lock of M, or aborts if any of the read-lock or write-lock of M are taken.
+* If T reads in M, T tries to acquire the read-lock of M, or aborts if the write-lock of M is taken.
+
+That way we still allow only a single write exclusive access to M, but multiple reads can concurrently access M.  
+Also note that we have to abort if the lock is taken, otherwise we risk deadlock.
+
+## 7.2 Two-Phase Locking with Invisible Reads
+
+Now we look at a different class of transactional memory.  
+In Two-phase locking, every time we want to access a memory space, we have to acquire the lock associated to that memory space. From the point of view of the hardware, this is costly, because the information that it has been locked needs to be sent to all of the caches to invalidate the cache lines associated with the lock (the value of the lock changed). When the operation is a write, this mechanism is inevitable, because in any case we have to change the value in the memory space. But for a read, there is something to do, because the read doesn't change the value in the memory space.  
+We call such behavior of locking when only reading a *visible read*, because it still invalidates cache lines.
+
+A visible read implementation affects a lot the performance of the software transactional memory when the workloads are read-dominated, because this means there is a lot of traffic on the bus between processors (for multi-core architectures).
+
+We are now going to modify Two-phase locking so that it has invisible reads (i.e. absolutely nothing is modified in memory when reading).  
+The idea is that, when reading a memory space, we go back to all previous memory regions we've read until now and check if they didn't change. If one has changed, we abort.
+* Each memory space has a timestamp `ts` on top of its value. This is used to detect if the value has changed (remember that "changed" means a new write was made, not that the value in itself is different).
+* We add a new local variable `rSet` (map), used to keep track of all the memory regions we've read with their timestamp upon first read.
+
+```
+Upon begin() {
+    wSet = empty List
+    wLog = empty Map
+    rSet = empty Map
+}
+
+Upon write(v) on memory M {
+    if (M not in wSet) {
+        lock M with l(M).c&s(unlocked, locked)
+        abort() if M was already locked
+        wSet.append(M)
+        wLog.put(M, s(M).read())
+    }
+    (_,ts) = s(M).read()
+    s(M).write(v,ts)
+}
+
+Upon read() on memory M {
+    (v,ts) = s(M).read()
+    if(M not in wSet) {
+        if(l(M) is locked or not validate()) abort()
+        if(M not in rSet) rSet.put(M, ts)
+    }
+    return v
+}
+
+Upon validate() {
+    for all (M,ts1) in rSet {
+        (_,ts2) = s(M).read()
+        if(ts1 != ts2) return false
+        if(M not in wSet and l(M) is locked) return false
+    }
+    return true
+}
+
+Upon commit() {
+    if(not validate()) abort()
+    for all M in wSet {
+        (v,ts) = s(M).read()
+        s(M).write(v, ts+1)
+    }
+    cleanup()
+}
+
+Upon cleanup() {
+    for all M in wSet, l(M).write(unlocked)
+}
+
+Upon abort() {
+    for all M in wSet, s(M).write(wLog.get(M))
+    cleanup()
+}
+```
+* `write(v)` works similarly as before, we just added a timestamp to values
+* `read()` reads the value at M. Then it checks if l(M) is locked. If it isn't, it also checks that all the previous reads up until now are still up to date (with respect to timestamp) and are not locked by other transactions, this is `validate()`. If one of these checks fail, the transaction aborts.
+* `commit()` checks one last time the validity of all the reads we've done. It also updates the timestamp of each memory space in which we have written, to indicate that the value changed. Finally it unlocks each memory space we have written into.  
+
+This algorithm, although ensuring invisible reads, is inefficient, because we need to check all the past reads each time we get a new read to do. If M is the total number of reads we do in a transaction, then the total number of checks on reads we do is 1+2+3+...+M+M = M + M*(M+1)/2 = O(M*M). What if we only do the checks at commit time ? We would only need to do M checks. This is not acceptable: remember that `read()` returns directly the value read. This value can then be used as a local computation inside the transaction. So if the value read was initialy invalid and we don't directly detect this, it could later in the transaction trigger undefined behaviour. Consider the following example:
+
+```java
+// Initially, y-x = 1
+
+T1: {
+    1. x = x+1
+    2. y = y+1
+}
+
+T2: {
+    1. //reads x...
+    2. //reads y...
+    3. z = 1/(y-x)
+}
+```
+Let's say T1 and T2 execute concurrently. The order of instructions is as follows: `T1:1. - T2:1. - T2:2. - T2:3. - T1:2.` This leads to a division by 0.  
+
+The example above is a good example to show that atomicity is not enough to have a correct software transactional memory when we use invisible reads. When having invisible reads, we have to be extra careful to work with a consistent memory view, and this comes at a cost. This is the tradeoff between the two classes: reads are either visible or careful.
+
+## 7.3 DSTM
+
+We haven't looked at liveness properties of our previous algorithms. How can we guarantee that eventually a transaction will commit ?  
+
+This is what DSTM algorithm guarantees, it works the same as Two-phase locking with invisible reads, but with a slight modification that enables obstruction-freedom:
+* A correct transaction that eventually executes alone eventually commits.
+
+The modification is simple and it is easy to see that obstruction-freedom is guaranteed: whenever a transaction T wants to write at memory M, it requires the write-lock on M. If the write-lock on M is taken by transaction T', T aborts T' and acquires the write-lock.
