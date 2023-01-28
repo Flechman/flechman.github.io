@@ -326,10 +326,10 @@ T read() {
 
 ## 3.2 Snapshot
 
-This object is more complicated to implement than the counter. A snapshot maintains an array of size M. Its sequential specification is as follows:
+This object is more complicated to implement than the counter. A snapshot maintains an array of size N (the number of processes). Its sequential specification is as follows:
 
 ```java
-T[] x = new T[M];
+T[] x = new T[N];
 
 T[] scan() {
     return x;
@@ -341,20 +341,20 @@ void update(int i, T v) {
 ```
 So it's like a mutable array, but it can only be read/returned entirely. It is powerful that we can implement this object while supporting our concurrency specifications.  
 
-Let's first look at a naive implementation that doesn't work. The `scan()` basically copies the array entry by entry, and the `update(i,v)` atomically updates entry i with value v (possible because register i is atomic).
+Let's first look at a naive concurrent implementation that doesn't work. The `scan()` basically copies the array entry by entry, and the `update(i,v)` atomically updates entry i associated to process pi with value v (possible because register i is atomic). Consider that `update(i,v)` is always called by process pi, and a write to `reg[i]` is only done by pi. 
 
 ```java
-T[] reg = new T[M];
+T[] reg = new T[N];
 
 T[] scan() {
     T[] x;
-    for(int i=0; i<M; ++i) {
+    for(int i=0; i<N; ++i) {
         x[i] = reg[i].read();
     }
     return x;
 }
 
-void update(int i, T v) {
+void update(int i, T v) { // If index is i, then called by process pi
     reg[i].write(v);
 }
 ```
@@ -372,12 +372,12 @@ Observe that, using scan from the previous naive implementation, if we execute s
 Actually, there's a small error in what we've just said. Scanning twice and checking if no values changed doesn't mean writes didn't happen. There could have been a write that changed the value and then another write that changed back to the previous value. To really capture the fact that no writes occured, we use timestamps. Now if we check if no timestamps changed, then we have our linearization point.
 
 ```java
-T[] reg = new T[M];
+T[] reg = new T[N];
 int ts = 0;
 
 T[] collect() {
     T[] x;
-    for(int i=0; i<M; ++i) {
+    for(int i=0; i<N; ++i) {
         x[i] = reg[i].read();
     }
     return x;
@@ -393,7 +393,7 @@ T[] scan() {
     return t1;
 }
 
-void update(int i, T v) {
+void update(int i, T v) { // If index is i, then called by process pi
     ts = ts + 1;
     reg[i].write(ts, v);
 }
@@ -412,10 +412,10 @@ To `scan()`, a process keeps collecting until two successive collects do not cha
 To `update()`, a process scans, and then writes the value, the new timestamp, and the result of the scan.
 
 ```java
-T[] reg = new T[M];
+T[] reg = new T[N];
 int ts = 0;
 
-void update(int i, T v) {
+void update(int i, T v) { // If index is i, then called by process pi
     ts = ts + 1;
     T[] s = scan();
     reg[i].write(ts, v, s);
@@ -423,7 +423,7 @@ void update(int i, T v) {
 
 T[] collect() {
     T[] x;
-    for(int i=0; i<M; ++i) {
+    for(int i=0; i<N; ++i) {
         x[i] = reg[i].read();
     }
     return x;
@@ -435,7 +435,7 @@ T[] scan() {
     while(true) {
         T[] t3 = collect();
         if(t3 == t2) return values(t3); // Return 2nd element of each cell of t3
-        for(int i=0; i<M; ++i) {
+        for(int i=0; i<N; ++i) {
             if(t3[i][1] >= t1[i][1]+2) return t3[i][3]
         }
         t2 = t3;
@@ -1069,3 +1069,4 @@ This is what DSTM algorithm guarantees, it works the same as Two-phase locking w
 * A correct transaction that eventually executes alone eventually commits.
 
 The modification is simple and it is easy to see that obstruction-freedom is guaranteed: whenever a transaction T wants to write at memory M, it requires the write-lock on M. If the write-lock on M is taken by transaction T', T aborts T' and acquires the write-lock.
+
