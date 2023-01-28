@@ -4,16 +4,42 @@
 * The course follows the book [*Algorithms for Concurrent Systems*](https://www.epflpress.org/produit/909/9782889152834/algorithms-for-concurrent-systems) by Rachid Guerraoui, Petr Kuznetsov.
 
 # Overview
-1. Introduction
-2. Implementing Registers  
-    2.1. Assumptions & Vocabulary  
-    2.2. Binary <ins>SRSW</ins> Safe -> Binary <ins>MRSW</ins> Safe  
-    2.3. Binary MRSW <ins>Safe</ins> -> Binary MRSW <ins>Regular</ins>  
-    2.4. <ins>Binary</ins> MRSW Regular -> <ins>M-Valued</ins> MRSW Regular  
-    2.5. M-Valued SRSW <ins>Regular</ins> -> M-Valued SRSW <ins>Atomic</ins>  
-    2.6. M-Valued <ins>SRSW</ins> Atomic -> M-Valued <ins>MRSW</ins> Atomic  
-    2.7. M-Valued <ins>MRSW</ins> Atomic -> M-Valued <ins>MRMW</ins> Atomic
-3. ...
+1. [Introduction](#1-introduction)
+2. [Implementing Registers](#2-implementing-registers)  
+    2.1. [Assumptions & Vocabulary](#21-assumptions--vocabulary)  
+    2.2. [Binary <ins>SRSW</ins> Safe -> Binary <ins>MRSW</ins> Safe](#22-binary-srsw-safe---binary-mrsw-safe)  
+    2.3. [Binary MRSW <ins>Safe</ins> -> Binary MRSW <ins>Regular</ins>](#23-binary-mrsw-safe---binary-mrsw-regular)  
+    2.4. [<ins>Binary</ins> MRSW Regular -> <ins>M-Valued</ins> MRSW Regular](#24-binary-mrsw-regular---m-valued-mrsw-regular)  
+    2.5.[ M-Valued SRSW <ins>Regular</ins> -> M-Valued SRSW <ins>Atomic</ins>](#25-m-valued-srsw-regular---m-valued-srsw-atomic)  
+    2.6. [M-Valued <ins>SRSW</ins> Atomic -> M-Valued <ins>MRSW</ins> Atomic](#26-m-valued-srsw-atomic---m-valued-mrsw-atomic)  
+    2.7. [M-Valued <ins>MRSW</ins> Atomic -> M-Valued <ins>MRMW</ins> Atomic](#27-m-valued-mrsw-atomic---m-valued-mrmw-atomic)
+3. [The Power of Registers](#3-the-power-of-registers)  
+    3.1. [Counter](#31-counter)  
+    3.2. [Snapshot](#32-snapshot)  
+4. [The Limitations of Registers](#4-the-limitations-of-registers)  
+    4.1. [Impossibility of Consensus](#41-impossibility-of-consensus)  
+    4.2. [Fetch&Inc](#42-fetchinc)  
+    4.3. [Queue](#43-queue)  
+    4.4. [Test&Set](#44-testset)  
+    4.5. [Compare&Swap](#45-compareswap)  
+5. [Universal Construction](#5-universal-construction)  
+    5.1. [Deterministic Case](#51-deterministic-case)  
+    5.2. [General (Deterministic and Non-Deterministic)](#52-general-deterministic-and-non-deterministic-case)  
+6. [Implementing the Consensus Object with Timing Assumptions](#6-implementing-the-consensus-object-with-timing-assumptions)  
+    6.1. [O-Consensus](#61-o-consensus)  
+    6.2. [L-Consensus](#62-l-consensus)  
+    6.3. [Consensus](#63-consensus)  
+    6.4. [<>Leader](#64-leader)  
+7. [Transactional Memory](#7-transactional-memory)  
+    7.1. [Two-Phase Locking](#71-two-phase-locking)  
+    7.2. [Two-Phase Locking with Invisible Reads](#72-two-phase-locking-with-invisible-reads)  
+    7.3. [DSTM](#73-dstm)  
+8. [Anonymous Concurrent Computing](#8-anonymous-concurrent-computing)  
+    8.1. [Weak Counter](#81-weak-counter)  
+    &nbsp;&nbsp;&nbsp;&nbsp;8.1.1. [Lock-Free Implementation](#811-lock-free-implementation)  
+    &nbsp;&nbsp;&nbsp;&nbsp;8.1.1. [Wait-Free Implementation](#812-wait-free-implementation)  
+    8.2. [General Snapshot](#82-general-snapshot)  
+    8.3. [Binary O-Consensus](#83-binary-o-consensus)  
 
 # 1. Introduction  
 
@@ -1090,7 +1116,7 @@ This is weaker because we are allowing the counter to be inexact, we just want s
 
 *We will see that from the implementation of `wInc()`, it is easy to implement a `read()`.*
 
-### 8.1.1 Lock-free implementation
+### 8.1.1 Lock-Free Implementation
 
 Processes share an infinite array of MWMR registers `REG` all initialized to 0. An entry of the array is used like a count unit of the counter.
 
@@ -1107,7 +1133,7 @@ int wInc() {
 The above implementation is *lock-free*, meaning that if multiple processes increment concurrently, at least one of them eventually succeeds and returns (there is progress). But a slow process may never terminate, it keeps incrementing because another fast process keeps incrementing.  
 If we want to get that all concurrent inrements eventually succeed, we need to be smarter.
 
-### 8.1.2 Wait-free implementation
+### 8.1.2 Wait-Free Implementation
 
 A *wait-free* implementation means that if multiple processes increment concurrently, eventually all of these processes succeed and return.  
 To achieve this, the idea is to have fast processes help slower processes find a good value to return. In order to do that, we introduce a shared MWMR register `L` (initialized to 0), which is updated when some process has found a `0` entry in `REG` (i.e. that process will eventually return).
