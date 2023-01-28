@@ -454,6 +454,8 @@ The 3 key points of this algorithm are:
 * `collect`ing twice and checking if nothing changed to get a linearization point
 * Sharing the scan of fast processes to prevent blocking of other slower processes
 
+*Note that here we have restricted that the array of Snapshot was the same size as the number of processes, and entry i is associated to process pi meaning only pi can write at entry i. In the [Anonymous Concurrent Computing](#8-anonymous-concurrent-computing) section we talk about a [general Snapshot](#82-general-snapshot) object, where the array is of any size, and any process can update any entry.*
+
 # 4. The Limitations of Registers
 
 What objects cannot be implemented with registers if we want them to be atomic and wait-free ?  
@@ -1070,3 +1072,148 @@ This is what DSTM algorithm guarantees, it works the same as Two-phase locking w
 
 The modification is simple and it is easy to see that obstruction-freedom is guaranteed: whenever a transaction T wants to write at memory M, it requires the write-lock on M. If the write-lock on M is taken by transaction T', T aborts T' and acquires the write-lock.
 
+# 8. Anonymous Concurrent Computing
+
+Up until now, we've seen algorithms that consider that process ids are visible. For example, process knows where it has to write in an array, and it knows where the other processes have to write.  
+This section presents concurrent algorithms that consider that processes are anonymous, i.e. no process knows who is who.
+
+## 8.1 Weak Counter
+
+We've [previously](#31-counter) seen how to implement a Counter in a concurrent setting. Here, we implement a weaker version of it, but in an additional setting where processes are anonymous. The only information processes have access to is the total number of processes N.
+
+The Weak Counter has one operation `wInc()` that increments the counter, and returns its value.
+The Weak Counter specification is
+1. If inc1 precedes another inc2, then inc2 returns a value that is larger than inc1.
+1. The value returned does not exceed the total number of invocations to `wInc()`.
+
+This is weaker because we are allowing the counter to be inexact, we just want some form of strict monotonicity and validity conditions. Two concurrent increments either return the same value, or successive values (x and x+1).
+
+*We will see that from the implementation of `wInc()`, it is easy to implement a `read()`.*
+
+### 8.1.1 Lock-free implementation
+
+Processes share an infinite array of MWMR registers `REG` all initialized to 0. An entry of the array is used like a count unit of the counter.
+
+```java
+int wInc() {
+    int i=0;
+    while(REG[i].read() != 0)
+        i = i+1;
+    REG[i].write(1);
+    return i;
+}
+```
+
+The above implementation is *lock-free*, meaning that if multiple processes increment concurrently, at least one of them eventually succeeds and returns (there is progress). But a slow process may never terminate, it keeps incrementing because another fast process keeps incrementing.  
+If we want to get that all concurrent inrements eventually succeed, we need to be smarter.
+
+### 8.1.2 Wait-free implementation
+
+A *wait-free* implementation means that if multiple processes increment concurrently, eventually all of these processes succeed and return.  
+To achieve this, the idea is to have fast processes help slower processes find a good value to return. In order to do that, we introduce a shared MWMR register `L` (initialized to 0), which is updated when some process has found a `0` entry in `REG` (i.e. that process will eventually return).
+
+```java
+int wInc() {
+    int i=0;
+    while(REG[i].read() != 0) {
+        if(L has been updated N times)
+            return (the largest value seen in L)
+        i = i+1;
+    }
+    L.write(i);
+    REG[i].write(1);
+    return i;
+}
+```
+
+* We do N times because a (slow) process pi needs to make sure that the largest value seen in L is a recent value. Recent value means that the call to `wInc()` that gave this value started after pi called its `wInc()`.  
+*(Convince yourself that this is a good definition of "recent". Think of an example where a process finds a `0` entry in `REG` and then sleeps for a long time, and then pi starts its `wInc()`)*
+* If pi waits N times, then by pigeonhole principle, pi knows that there is one process pj among the N-1 other processes that has incremented at least twice the counter. Since pi captured pj's first increment, we are certain that the second time pj increments, the call to increment was done after pi's call.
+
+The detailed implementation with less pseudo-code and actual code is given below:
+
+```java
+int wInc() {
+    int i=0;
+    int k=0; // Used to count the number of times L changed
+    int largest = L.read();
+    int recentL = largest;
+    while(REG[i].read() != 0) {
+        i = i+1;
+        int l = L.read();
+        if(l != recentL) {
+            recentL = l;
+            largest = max(largest, recentL);
+            k = k+1;
+            if(k == N) return largest;
+        }
+    }
+    L.write(i);
+    REG[i].write(1);
+    return i;
+}
+```
+
+## 8.2 General Snapshot
+
+The Snapshot we've seen [before](#32-snapshot) assumed the array we're working on is of size N, the number of processes. Furthermore the concurrent implementation of it assumed process with id i could only write in entry i of the array.  
+
+Here, the General Snapshot relaxes these assumptions. The array we're working on is of any size M, and any process can write in any entry.
+
+* The processes share a Weak Counter `Wcounter`, initialized to 0. It is used as timestamp generation.
+* As in the Snapshot we've seen before, the processes share an array `REG` of size M, that contains in each entry a value, a timestamp, and a copy of the entire array of values.
+* Just as before, to `scan()` a process keeps collecting, and returns a collect if it did not change, or some collect returned by a concurrent scan. To `update(i,v)`, a process scans and writes the value, new timestamp and result of the scan.
+
+```java
+void update(int i, T v) {
+    int ts = Wcounter.wInc();
+    REG[i].write(v,ts,scan());
+}
+
+T[] collect() {
+    T[] x;
+    for(int i=0; i<M; ++i) {
+        x[i] = REG[i].read();
+    }
+    return x;
+}
+
+T[] scan() {
+    int ts = Wcounter.wInc();
+    while(true) {
+        /* If N+1 sets of collect() return identical
+           results then return that one */
+
+        /* If some REG[j] contains a collect with
+           a higher timestamp than ts, return it */
+    }
+}
+```
+* In `scan()`, the first "If" is similar to before but we need N+1 identical collects instead of just two. The second "If" is similar to before.
+
+## 8.3 Binary O-Consensus
+
+Recall O-Consensus [here](#61-o-consensus).
+* We consider binary O-Consensus, meaning a value v takes either value 0 or 1.
+* Processes share two infinite arrays of registers: `REG_0` and `REG_1`.
+* Every process holds an integer `i` initialized to **1**.
+* Idea: to impose a value v, a process needs to be fast enought to fill in registers `REG_v`.
+
+```java
+int i=1;
+
+boolean propose(boolean v) {
+    while(true) {
+        if(REG_(1-v)[i] == 0) {
+            REG_v[i] = 1;
+            if(i>1 && REG_(1-v)[i-1] == 0)
+                return v;
+        } else {
+            v = 1-v;
+        }
+        i = i+1
+    }
+}
+```
+
+Consensus under timing assumptions can also be implemented in the anonymous case. It performs similarly as the algorithm above, i.e. processes race, but it favors 0 and slows down processes that propose 1. 
