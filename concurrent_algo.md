@@ -679,7 +679,7 @@ First we list the building blocks of the algorithm.
 * Instances communicate with eachother through registers and consensus objects.
 * Processes share an array of N MRSW registers called `REQ` (N being the number of processes). 
 * Processes share an array of Consensus instances `CONS` (of possibly infinite size, actually the size of the number of total requests made to the object at the end of execution).
-* Each process has its own local data structures: a list `PERF` storing requests that the process has performed, and a list `INV` of requests that the process still needs to perform. We explain what this is later.
+* Each process has its own local data structures: a list `perf` storing requests that the process has performed, and a list `inv` of requests that the process still needs to perform. We explain what this is later.
 * Note that every requests are uniquely identified
 
 Now, the algorithm goes as follows.
@@ -687,10 +687,10 @@ Now, the algorithm goes as follows.
 * To ensure linearizability of the requests, every process must perform the requests in the same order. This is where `CONS` comes into play. It enables every processes to treat the requests in the same order. Each time they must treat a request, they go into a new round r, and they decide which request is treated at round r with `CONS[r]`.
 * Note that pi waits for `REQ[i]` to be performed before treating a new request coming at it. That way request in `REQ[i]` is not overwritten until it was performed. The algorithm is still wait-free because `REQ[i]` is eventually performed so the next request is eventually treated.
 * Thus, `REQ` and `CONS` are combined to ensure that 1. every request invoked is performed and a result is eventually returned 2. requests are executed in the same total order at all processes (linearization) 3. this order 
-preserves the real-time order of requests that are made to the same process. For example, for the Queue, the order will decide which [`enq(5)` from p0] or [`enq(8)` from p1] goes first, but both will be done by p0 and p1 on their local copy of the Queue.
-* Periodically, pi goes through `REQ` and for all j in [N], appends `REQ[j]` at the end of `INV` if it is not in `PERF`. `INV` is the (ordered) list of pending requests made to all processes, it should not contain a request that has already been performed.
-* If `INV` is not empty and we are at round r, pi proposes `INV[0]` to `CONS[r]`. Once `CONS[r]` returns with request v, r is incremented, pi adds v to `PERF`, removes v from `INV`, and performs v. If v = `REQ[i]`, pi returns the result of performing v, and `REQ[i]` can be overwritten.
-* The algorithm can be modified so that Consensus works with an ordered list of requests instead of a single request. For example, when requests are made to pi, they are added (in order) into `REQ[i]` which is now a list, and then this list is added into `INV`. This removes the need to wait for `REQ[i]` to be performed to prevent from overwritting it.
+preserves the real-time order of requests that are made to the same process. For example, for the Queue, the order will decide which [`enq(5)` from p0] or [`enq(8)` from p1] goes first, but both will be done by p0 and p1 on their local copy of the Queue. And if we have [`enq(1)` from p0] and then [`enq(2)` from p0], `enq(1)` will be done before `enq(2)`.
+* Periodically, pi goes through `REQ` and for all j in [N], appends `REQ[j]` at the end of `inv` if it is not in `perf`. `inv` is the (ordered) list of pending requests made to all processes, it should not contain a request that has already been performed.
+* If `inv` is not empty and we are at round r, pi proposes `inv[0]` to `CONS[r]`. Once `CONS[r]` returns with request v, r is incremented, pi adds v to `perf`, removes v from `inv`, and performs v. If v = `REQ[i]`, pi returns the result of performing v, and `REQ[i]` can be overwritten.
+* The algorithm can be modified so that Consensus works with an ordered list of requests instead of a single request. For example, when requests are made to pi, they are added (in order) into `REQ[i]` which is now a list, and then this list is added into `inv`. This removes the need to wait for `REQ[i]` to be performed to prevent from overwritting it.
 
 The two key points of the algorithm are 
 1. every process performs locally every requests made, no matter from which process the request came from in the beginning (job done with registers).
