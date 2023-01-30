@@ -829,15 +829,16 @@ P propose(P v) {
             if(val == null)
                 val = v;
             Reg[i].V.write(val, ts);            
-            if(ts == Reg.highestTsp())          
+            if(ts == Reg.highestTsp())        
+                R.write(val);               (**)  
                 return val;
             ts = ts + N;
         }
     }
-    return R.read();                        (**)
+    return R.read();                        (***)
 }
 ```
-The only changes from L-Consensus algorithm are (*) and (**).
+The only changes from L-Consensus algorithm are (\*), (\*\*) and (***).
 
 This enforces the constraint that, once a process has decided, eventually, all the other correct processes decide. Since by L-Consensus there is eventually one process that decides, then eventually every correct process decides.
 
