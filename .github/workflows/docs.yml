@@ -35,6 +35,10 @@ jobs:
           # help find package-lock.json
           cache-dependency-path: package-lock.json
 
+
+      - name: Setup VuePress
+        run: pnpm add -D vuepress@next @vuepress/client@next vue
+
       # run build script
       - name: Build VuePress site
         run: pnpm docs:build
