@@ -11,9 +11,9 @@ module.exports = {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Notes', link: '/notes/' }
-    ],
+    ]
     //logo: '/images/mountain2.png',
-  },
+  }
 
   //plugins: [
   //  '@vuepress/plugin-back-to-top',
