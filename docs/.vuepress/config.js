@@ -1,14 +1,4 @@
 module.exports = {
-    title: 'Rémi Delacourt',
-    description: 'A website to host all my notes and thoughts',
-    themeConfig: {
-      nav: [
-        { text: 'Home', link: '/' },
-        { text: 'Notes', link: '/notes' }
-      ]
-    }
-  }
-module.exports = {
   //base: '/',
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#title
@@ -38,9 +28,6 @@ module.exports = {
    */
   themeConfig: {
     docsDir: 'docs',
-    editLinks: true,
-    // custom text for edit link. Defaults to "Edit this page"
-    editLinkText: 'Edit This Page On GitHub',
     lastUpdated: true,
     nav: [
       { text: 'Home', link: '/' },
@@ -57,51 +44,27 @@ module.exports = {
       //   ]
       // },
     ],
+    logo: '/images/mountain2.png',
     // displayAllHeaders: true, // Default: false
     // activeHeaderLinks: false, // Default: true
-    sidebarDepth: 5,    // optional, defaults to 1
-    sidebar: {
-      '/backend/java/': [
-        {
-          title: 'Java',
-          collapsable: false, // optional, defaults to true
-          children: [
-            // '',
-            'javaBasics',
-            'javaUtils',
-            'javaConcurrency',
-            'javaIO',
-            'javaMisc',
-            'JVM',
-          ]
-        },
-      ],
-      '/src/guide/': [
-        {
-          title: 'Guide',
-          collapsable: false,
-          children: [
-            '',
-            'using-vue',
-          ]
-        },
-        {
-          title: 'Group 1',   // required
-          path: '/foo/',      // optional, link of the title, which should be an absolute path and must exist
-          collapsable: false, // optional, defaults to true
-          sidebarDepth: 1,    // optional, defaults to 1
-          children: [
-            '/'
-          ]
-        },
-        {
-          title: 'Group 2',
-          children: [ /* ... */ ],
-          initialOpenGroupIndex: -1 // optional, defaults to 0, defines the index of initially opened subgroup
-        }
-      ],
-      '/': 'auto',
-    }
+    // sidebarDepth: 5,    // optional, defaults to 1
+    // sidebar: {
+    //   '/backend/java/': [
+    //     {
+    //       title: 'Java',
+    //       collapsable: false, // optional, defaults to true
+    //       children: [
+    //         'javaBasics',
+    //         'javaUtils',
+    //         'javaConcurrency',
+    //         'javaIO',
+    //         'javaMisc',
+    //         'JVM',
+    //       ]
+    //     },
+    //   ],
+    //   '/': 'auto',
+    // }
   },
 
   /**
