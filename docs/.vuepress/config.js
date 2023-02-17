@@ -31,7 +31,7 @@ module.exports = {
     // lastUpdated: true,
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Notes', link: '/notes' }
+      { text: 'Notes', link: '/notes/' }
       // {
       //   text: 'Java',
       //   items: [
