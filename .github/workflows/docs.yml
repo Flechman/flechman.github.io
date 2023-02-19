@@ -37,7 +37,7 @@ jobs:
 
 
       - name: Setup VuePress
-        run: pnpm add -D vuepress @vuepress/client vue
+        run: pnpm add -D vuepress@next @vuepress/client@next vue
 
       # run build script
       - name: Build VuePress site

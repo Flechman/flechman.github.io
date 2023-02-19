@@ -7,8 +7,11 @@
   "license": "MIT",
   "devDependencies": {
     "@maginapp/vuepress-plugin-katex": "^1.0.11",
+    "@vuepress/client": "^2.0.0-beta.60",
     "@vuepress/plugin-back-to-top": "^1.9.8",
-    "@vuepress/plugin-medium-zoom": "^1.9.8"
+    "@vuepress/plugin-medium-zoom": "^1.9.8",
+    "vue": "^3.2.47",
+    "vuepress": "^2.0.0-beta.60"
   },
   "scripts": {
     "dev": "vuepress dev docs",
