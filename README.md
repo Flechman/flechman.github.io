@@ -1,0 +1,1 @@
+This folder hosts global files that can be referenced in any part of the project. See [here](https://vuepress.github.io/guide/assets.html#public-files) for details on how to use.
