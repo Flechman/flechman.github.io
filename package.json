@@ -5,14 +5,11 @@
   "repository": "git@github.com:Flechman/flechman.github.io.git",
   "author": "Delacourt <remi.delacourt@gmail.com>",
   "license": "MIT",
-
   "devDependencies": {
-    "vuepress": "^1.9.8",
     "@maginapp/vuepress-plugin-katex": "^1.0.11",
     "@vuepress/plugin-back-to-top": "^1.9.8",
     "@vuepress/plugin-medium-zoom": "^1.9.8"
   },
-
   "scripts": {
     "dev": "vuepress dev docs",
     "build": "vuepress build docs"
