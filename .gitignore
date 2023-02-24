@@ -40,3 +40,7 @@ Thumbs.db
 #####################
 yarn.lock
 node_modules/
+docs/.vuepress/.cache
+docs/.vuepress/.temp
+.vuepress/.cache
+.vuepress/.temp
