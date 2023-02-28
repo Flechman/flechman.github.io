@@ -1,0 +1,152 @@
+/****************************************/
+/********** LIGHT MODE COLORS ***********/
+/****************************************/
+:root {
+    // brand colors
+    --c-brand: #003c66;
+    --c-brand-light: #00346c;
+
+    // background colors
+    --c-bg: #ffffff;
+    --c-bg-light: #f3f4f5;
+    --c-bg-lighter: #eeeeee;
+    --c-bg-dark: #ebebec;
+    --c-bg-darker: #e6e6e6;
+    --c-bg-navbar: var(--c-bg);
+    --c-bg-sidebar: var(--c-bg);
+    --c-bg-arrow: #cccccc;
+
+    // text colors
+    --c-text: #2c3e50;
+    --c-text-accent: var(--c-brand);
+    --c-text-light: #3a5169;
+    --c-text-lighter: #4e6e8e;
+    --c-text-lightest: #6a8bad;
+    --c-text-quote: #999999;
+
+    // border colors
+    --c-border: #eaecef;
+    --c-border-dark: #dfe2e5;
+
+    // custom container colors
+    --c-tip: #003c66;
+    --c-tip-bg: var(--c-bg-light);
+    --c-tip-title: var(--c-text);
+    --c-tip-text: var(--c-text);
+    --c-tip-text-accent: var(--c-text-accent);
+    --c-warning: #ffc310;
+    --c-warning-bg: #fffae3;
+    --c-warning-bg-light: #fff3ba;
+    --c-warning-bg-lighter: #fff0b0;
+    --c-warning-border-dark: #f7dc91;
+    --c-warning-details-bg: #fff5ca;
+    --c-warning-title: #f1b300;
+    --c-warning-text: #746000;
+    --c-warning-text-accent: #edb100;
+    --c-warning-text-light: #c1971c;
+    --c-warning-text-quote: #ccab49;
+    --c-danger: #f11e37;
+    --c-danger-bg: #ffe0e0;
+    --c-danger-bg-light: #ffcfde;
+    --c-danger-bg-lighter: #ffc9c9;
+    --c-danger-border-dark: #f1abab;
+    --c-danger-details-bg: #ffd4d4;
+    --c-danger-title: #ed1e2c;
+    --c-danger-text: #660000;
+    --c-danger-text-accent: #bd1a1a;
+    --c-danger-text-light: #b5474d;
+    --c-danger-text-quote: #c15b5b;
+    --c-details-bg: #eeeeee;
+
+    // badge component colors
+    --c-badge-tip: var(--c-tip);
+    --c-badge-warning: #ecc808;
+    --c-badge-warning-text: var(--c-bg);
+    --c-badge-danger: #dc2626;
+    --c-badge-danger-text: var(--c-bg);
+
+    // transition vars
+    --t-color: 0.3s ease;
+    --t-transform: 0.3s ease;
+
+    // code blocks vars
+    --code-bg-color: #282c34;
+    --code-hl-bg-color: rgba(0, 0, 0, 0.66);
+    --code-ln-color: #9e9e9e;
+    --code-ln-wrapper-width: 3.5rem;
+
+    // font vars
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    --font-family-code: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+
+    // layout vars
+    --navbar-height: 3.6rem;
+    --navbar-padding-v: 0.7rem;
+    --navbar-padding-h: 1.5rem;
+    --sidebar-width: 20rem;
+    --sidebar-width-mobile: calc(var(--sidebar-width) * 0.82);
+    --content-width: 740px;
+    --homepage-width: 960px;
+}
+
+/****************************************/
+/*********** DARK MODE COLORS ***********/
+/****************************************/
+html.dark {
+    // brand colors
+    --c-brand: #003c66;
+    --c-brand-light: #00346c;
+
+    // background colors
+    --c-bg: #22272e;
+    --c-bg-light: #2b313a;
+    --c-bg-lighter: #262c34;
+    --c-bg-dark: #343b44;
+    --c-bg-darker: #37404c;
+
+    // text colors
+    --c-text: #d2d6d9;
+    --c-text-light: #e3e6e8;
+    --c-text-lighter: #d3dde7;
+    --c-text-lightest: #c2c8cf;
+
+    // border colors
+    --c-border: #3e4c5a;
+    --c-border-dark: #34404c;
+
+    // custom container colors
+    --c-tip: #003c66;
+    --c-warning: #e0ad15;
+    --c-warning-bg: #2d2f2d;
+    --c-warning-bg-light: #423e2a;
+    --c-warning-bg-lighter: #44442f;
+    --c-warning-border-dark: #957c35;
+    --c-warning-details-bg: #39392d;
+    --c-warning-title: #fdca31;
+    --c-warning-text: #d8d96d;
+    --c-warning-text-accent: #ffbf00;
+    --c-warning-text-light: #ddb84b;
+    --c-warning-text-quote: #ccab49;
+    --c-danger: #fc1e38;
+    --c-danger-bg: #39232c;
+    --c-danger-bg-light: #4b2b35;
+    --c-danger-bg-lighter: #553040;
+    --c-danger-border-dark: #a25151;
+    --c-danger-details-bg: #482936;
+    --c-danger-title: #fc2d3b;
+    --c-danger-text: #ea9ca0;
+    --c-danger-text-accent: #fd3636;
+    --c-danger-text-light: #d9777c;
+    --c-danger-text-quote: #d56b6b;
+    --c-details-bg: #323843;
+
+    // badge component colors
+    --c-badge-warning: var(--c-warning);
+    --c-badge-warning-text: #3c2e05;
+    --c-badge-danger: var(--c-danger);
+    --c-badge-danger-text: #401416;
+
+    // code blocks vars
+    --code-hl-bg-color: #363b46;
+}

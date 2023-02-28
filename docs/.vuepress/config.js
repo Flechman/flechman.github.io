@@ -8,7 +8,15 @@ export default {
         logoDark: '/images/mountain2.png',
         navbar: [
             { text: 'Home', link: '/' },
-            { text: 'Notes', link: '/notes/' },
+            { text: 'Notes', link: '/notes/notes.html' },
         ],
-    })
+        editLink: false,
+        contributors: false,
+    }),
+    plugins: [
+        '@vuepress/plugin-back-to-top',
+        '@vuepress/plugin-medium-zoom',
+        '@maginapp/vuepress-plugin-katex',
+        '@vuepress/plugin-toc'
+    ],
 }

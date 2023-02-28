@@ -21,7 +21,7 @@ jobs:
         uses: pnpm/action-setup@v2
         with:
           # choose pnpm version to use
-          version: 6.9.1
+          version: 7
           # install deps with pnpm
           run_install: true
 
@@ -32,12 +32,6 @@ jobs:
           node-version: 18
           # cache deps for pnpm
           cache: pnpm
-          # help find package-lock.json
-          cache-dependency-path: package-lock.json
-
-
-      - name: Setup VuePress
-        run: pnpm add -D vuepress@next @vuepress/client@next vue
 
       # run build script
       - name: Build VuePress site
