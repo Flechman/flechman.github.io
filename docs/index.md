@@ -1,6 +1,6 @@
 ---
 home: true
-heroImage: /images/BigSurRoad.jpeg
+heroImage: /images/Appenzeller2.jpg
 heroText: Hey, I'm Rémi :)
 tagline: This site hosts all my notes, from lecture notes to personal project notes
 footerHtml: true
