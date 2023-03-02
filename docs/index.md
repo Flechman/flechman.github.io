@@ -8,4 +8,4 @@ footer: <div><a target="_blank" href="remidelacourt.com"><img src="/images/mount
 ---
 
 Hi! My name is Rémi Delacourt, I'm a student at EPFL in Lausanne, Switzerland. I'm currently studying Computer Science, more specifically Theoretical Computer Science. My areas of interest revolve around Algorithms: Convex Optimization, Machine Learning and AI, Distributed Algorithms, Urban Systems.
-I'm also super into working on cool tech projects, and I'd be happy to exchange on current, new, or upcoming technologies and their impact on the word with you!
+I'm also super into working on cool tech projects, and I'd be happy to exchange on current, new, or upcoming technologies and their impact on the word with you! You can shoot me an email at [remi.delacourt@gmail.com](mailto:remi.delacourt@gmail.com) anytime.

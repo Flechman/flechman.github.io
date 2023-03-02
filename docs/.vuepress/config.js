@@ -13,10 +13,11 @@ export default {
         editLink: false,
         contributors: false,
     }),
+    markdown: {
+    },
     plugins: [
         '@vuepress/plugin-back-to-top',
         '@vuepress/plugin-medium-zoom',
-        '@maginapp/vuepress-plugin-katex',
         '@vuepress/plugin-toc'
     ],
 }
