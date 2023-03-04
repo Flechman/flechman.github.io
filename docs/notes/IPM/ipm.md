@@ -1,7 +1,3 @@
----
-externalLinkIcon: false
----
-
 # Interior Point Methods for Solving Linear Programs
 
 * These notes are based on my semester research project in the [Theoretical Computer Science Lab](https://theory.epfl.ch/) at EPFL, supervised by Prof. Dr. Kapralov and Kshiteej Sheth.
@@ -13,7 +9,7 @@ Interior-Point Methods are approximation algorithms that solve linear programs. 
 
 These notes first present the general framework of Interior-Point Methods and how it works, and then the concept of barriers is formalized to present the Lee-Sidford barrier, which is used to achieve runtime improvements. The notes will focus on understanding the theoretical concepts of the method rather than focusing on the details of the runtime. The concepts are in my opinion super interesting and very smart!
 
-
+$e^x$
 
 ## References
 

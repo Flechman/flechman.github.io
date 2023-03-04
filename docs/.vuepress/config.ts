@@ -1,4 +1,6 @@
 import { defaultTheme } from '@vuepress/theme-default'
+import { katexPlugin } from '@renovamen/vuepress-plugin-katex' //yarn add @renovamen/vuepress-plugin-katex@next
+//import tocPlugin  from '@vuepress/plugin-toc'
 
 export default {
     theme: defaultTheme({
@@ -12,12 +14,12 @@ export default {
         ],
         editLink: false,
         contributors: false,
+        themePlugins: {
+            backToTop: true,
+            externalLinkIcon: false,
+        },
     }),
-    markdown: {
-    },
     plugins: [
-        '@vuepress/plugin-back-to-top',
-        '@vuepress/plugin-medium-zoom',
-        '@vuepress/plugin-toc'
+        katexPlugin()
     ],
 }
