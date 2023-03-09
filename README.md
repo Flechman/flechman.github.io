@@ -14,3 +14,4 @@ TODO:
 5. Theme choice and beautify
 6. Make the [toc](https://v2.vuepress.vuejs.org/reference/plugin/toc.html#toc) plugin work (with numbered list instead of bulleted list)
 7. Make the sidebar header view to show only relevant headers
+8. Give page # references to Definitons, Lemmas and Theorems in the IPM page
