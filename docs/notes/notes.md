@@ -6,3 +6,4 @@
 
 ### Other
 * [Interior Point Methods](IPM/ipm.md)
+* [IPM Part 2: The Lee-Sidford Barrier](IPM_lee_sidford/ipm_lee_sidford.md)
