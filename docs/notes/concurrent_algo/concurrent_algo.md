@@ -3,45 +3,7 @@
 * [Course Website](https://dcl.epfl.ch/site/education/ca_2021)
 * The course follows the book [*Algorithms for Concurrent Systems*](https://www.epflpress.org/produit/909/9782889152834/algorithms-for-concurrent-systems) by Rachid Guerraoui, Petr Kuznetsov.
 
-# Overview
-1. [Introduction](#1-introduction)
-2. [Implementing Registers](#2-implementing-registers)  
-    2.1. [Assumptions & Vocabulary](#21-assumptions--vocabulary)  
-    2.2. [Binary <ins>SRSW</ins> Safe -> Binary <ins>MRSW</ins> Safe](#22-binary-srsw-safe---binary-mrsw-safe)  
-    2.3. [Binary MRSW <ins>Safe</ins> -> Binary MRSW <ins>Regular</ins>](#23-binary-mrsw-safe---binary-mrsw-regular)  
-    2.4. [<ins>Binary</ins> MRSW Regular -> <ins>M-Valued</ins> MRSW Regular](#24-binary-mrsw-regular---m-valued-mrsw-regular)  
-    2.5.[ M-Valued SRSW <ins>Regular</ins> -> M-Valued SRSW <ins>Atomic</ins>](#25-m-valued-srsw-regular---m-valued-srsw-atomic)  
-    2.6. [M-Valued <ins>SRSW</ins> Atomic -> M-Valued <ins>MRSW</ins> Atomic](#26-m-valued-srsw-atomic---m-valued-mrsw-atomic)  
-    2.7. [M-Valued <ins>MRSW</ins> Atomic -> M-Valued <ins>MRMW</ins> Atomic](#27-m-valued-mrsw-atomic---m-valued-mrmw-atomic)
-3. [The Power of Registers](#3-the-power-of-registers)  
-    3.1. [Counter](#31-counter)  
-    3.2. [Snapshot](#32-snapshot)  
-4. [The Limitations of Registers](#4-the-limitations-of-registers)  
-    4.1. [Impossibility of Consensus](#41-impossibility-of-consensus)  
-    4.2. [Fetch&Inc](#42-fetchinc)  
-    4.3. [Queue](#43-queue)  
-    4.4. [Test&Set](#44-testset)  
-    4.5. [Compare&Swap](#45-compareswap)  
-5. [Universal Construction](#5-universal-construction)  
-    5.1. [Deterministic Case](#51-deterministic-case)  
-    5.2. [General (Deterministic and Non-Deterministic)](#52-general-deterministic-and-non-deterministic-case)  
-6. [Implementing the Consensus Object with Timing Assumptions](#6-implementing-the-consensus-object-with-timing-assumptions)  
-    6.1. [O-Consensus](#61-o-consensus)  
-    6.2. [L-Consensus](#62-l-consensus)  
-    6.3. [Consensus](#63-consensus)  
-    6.4. [<>Leader](#64-leader)  
-7. [Transactional Memory](#7-transactional-memory)  
-    7.1. [Two-Phase Locking](#71-two-phase-locking)  
-    7.2. [Two-Phase Locking with Invisible Reads](#72-two-phase-locking-with-invisible-reads)  
-    7.3. [DSTM](#73-dstm)  
-8. [Anonymous Concurrent Computing](#8-anonymous-concurrent-computing)  
-    8.1. [Weak Counter](#81-weak-counter)  
-    &nbsp;&nbsp;&nbsp;&nbsp;8.1.1. [Lock-Free Implementation](#811-lock-free-implementation)  
-    &nbsp;&nbsp;&nbsp;&nbsp;8.1.1. [Wait-Free Implementation](#812-wait-free-implementation)  
-    8.2. [General Snapshot](#82-general-snapshot)  
-    8.3. [Binary O-Consensus](#83-binary-o-consensus)  
-
-# 1. Introduction  
+## 1. Introduction  
 
 With multicore architectures becoming the standard nowadays, we need a way to execute instructions concurrently following certain rules that make the programs execute in a coherent manner. We study here the foundations of the algorithms that enable such concurrency.
 
@@ -68,9 +30,9 @@ Concurrent execution diagrams will be shown to represent situations. Here is an 
 * Each box represents an operation currently executing. 
 * Each dot represents an indivisible point in time where the operation could happen, these dots are used when we want to see if atomicity is possible in the execution diagram, this will be explained further later.
 
-# 2. Implementing Registers
+## 2. Implementing Registers
 
-## 2.1 Assumptions & Vocabulary
+### 2.1 Assumptions & Vocabulary
 A **register** is a memory space and has two operations: *read()* and *write()*.  
 We call this a R/W register.  
 We assume that we work only with  integers, since any object can be built on top of integers.  
@@ -117,9 +79,7 @@ The diagram below shows an example of a valid execution for a regular register, 
 
 ![Example of valid regular execution but invalid atomic execution](./imgs/valid_regular_invalid_atomic.png)
 
---
-
-## 2.2 Binary SRSW Safe -> Binary MRSW Safe
+### 2.2 Binary SRSW Safe -> Binary MRSW Safe
 
 Our basic sequential R/W register that we start from guarantees [Binary, SRSW, Safe].  
 From there we will extend to obtain a R/W register that guarantees [Binary, MRSW, Safe], so we go from having a single reader to handling multiple concurrent readers.  
@@ -144,7 +104,7 @@ Note that this transformation would also work if we go from [Multivalued, SRSW, 
 However, from [Multivalued, SRSW, Atomic] to [Multivalued, MRSW, Atomic] this transformation doesn't work. Think of a potential situation where it doesn't work (hint: first *read* 
 with lower id than second *read*, concurrent with a *write*).
 
-## 2.3 Binary MRSW Safe -> Binary MRSW Regular
+### 2.3 Binary MRSW Safe -> Binary MRSW Regular
 
 Now we go from a register that provides [Binary, MRSW, Safe] guarantees to one that provides [Binary, MRSW, Regular] guarantees.  
 To go from Safe to Regular, we need to restrict the number of possible outcomes of a *read()*, we can't have any value in the domain set. We will heavily rely on the fact that we have Binary.  
@@ -168,7 +128,7 @@ The transformation works also for SRSW.
 Since we rely on the fact that our domain set is of size 2 this doesn't work with Multivalued.  
 It doesn't work for Regular to Atomic.
 
-## 2.4 Binary MRSW Regular -> M-Valued MRSW Regular
+### 2.4 Binary MRSW Regular -> M-Valued MRSW Regular
 
 Here we go from Binary to Multivalued MRSW Regular register.  
 
@@ -202,7 +162,7 @@ void write(int v) {
 
 * Regularity is guaranteed: let v0 be the most recent value in the register. Now we have a *read* concurrent with a *write* with value v1. If v1 > v0, then either the *read* returns v1 or it returns v0. It cannot return v > v1 (v1 stops the *read*), it cannot return v < v0 because when v0 was written it cleared the smaller values, and it cannot return v0 < v < v1 because if v > v0 then v0 is 0 but then from the write definition all the v0 < v < v1 have also been cleared. The case v0 > v1 is similar, with the key point being that when writing we write 1 before clearing the smaller values. That way if the *read* happens all before the *write* then v0 will be returned, else v1 will be returned. This can be generalized to multiple *writes* concurrent with the *read*.
 
-## 2.5 M-Valued SRSW Regular -> M-Valued SRSW Atomic
+### 2.5 M-Valued SRSW Regular -> M-Valued SRSW Atomic
 
 We come back to a Single Read register, to first try to go from Regular to Atomic.  
 
@@ -237,7 +197,7 @@ If we were to extend the algorithm for multiple readers by setting `reg` to be a
 
 An important note here is that we don't limit the size of the timestamp, in other words we assume we have infinite capacity. This algorithm only works if we assume this, and finding algorithms that work with limited capacity is still a hot topic in Concurrent Algorithms research.
 
-## 2.6 M-Valued SRSW Atomic -> M-Valued MRSW Atomic
+### 2.6 M-Valued SRSW Atomic -> M-Valued MRSW Atomic
 
 Since our algorithm in the previous section failed to guarantee atomicity when we have Multiple Readers, we now give an algorithm that succeeds.  
 
@@ -275,7 +235,7 @@ This can (to some extent) be thought of as a consensus mechanism put in place am
 
 The algorithm doesn't work for multiple writers, because each entry of `wReg` only supports Single Writer.
 
-## 2.7 M-Valued MRSW Atomic -> M-Valued MRMW Atomic
+### 2.7 M-Valued MRSW Atomic -> M-Valued MRMW Atomic
 
 To create an algorithm that enables 1 register to support Multiple Writers (N of them), we'll use N registers that support MRSW. Register j is for writer j.  
 
@@ -305,12 +265,12 @@ void write(int v) {
 Any writer w2 that writes after the most recent finished writer w1 will have at least w1's timestamp, so its new timestamp will be up to date.  
 Any read r2 that reads after the most recent finished read r1 (who read t1 as latest timestamp) will read at least t1 as latest timestamp, so r2 is guaranteed to return a value at least as recent as r1, which verifies Atomicity.
 
-# 3. The Power of Registers
+## 3. The Power of Registers
 
 What atomic objects can we implement in a wait-free manner with registers ?  
 Here, we present two common (and interesting) objects that can be implemented in such a way.  
 
-## 3.1 Counter
+### 3.1 Counter
 
 A counter can be read and incremented, its sequential specification is as follows:
 
@@ -350,7 +310,7 @@ T read() {
 * This implementation is atomic, because the increments are isolated between processes, and the `read()` operation of the registers is atomic (thus a newer sum will always be at least as high as an older sum).
 
 
-## 3.2 Snapshot
+### 3.2 Snapshot
 
 This object is more complicated to implement than the counter. A snapshot maintains an array of size N (the number of processes). Its sequential specification is as follows:
 
@@ -482,12 +442,12 @@ The 3 key points of this algorithm are:
 
 *Note that here we have restricted that the array of Snapshot was the same size as the number of processes, and entry i is associated to process pi meaning only pi can write at entry i. In the [Anonymous Concurrent Computing](#8-anonymous-concurrent-computing) section we talk about a [general Snapshot](#82-general-snapshot) object, where the array is of any size, and any process can update any entry.*
 
-# 4. The Limitations of Registers
+## 4. The Limitations of Registers
 
 What objects cannot be implemented with registers if we want them to be atomic and wait-free ?  
 In this section we look at the impossibility of consensus theorem, and we use this theorem to prove that some objects cannot be implemented using only registers in a concurrent context.  
 
-## 4.1 Impossibility of Consensus
+### 4.1 Impossibility of Consensus
 
 Consensus is an object that has only one function `propose(v)` which returns a value. When a value is returned we say that this value was decided. `propose` is called by each process and the specifications of consensus are as follows:
 * (wait-freedom/termination) when `propose` is called, it eventually returns
@@ -537,7 +497,7 @@ This shows that the register object is too weak for consensus, read and write is
 In what follows, we present some objects that cannot be implemented in our concurrent context using only registers.   
 The way we prove that they cannot be implemented using only registers is by proving that we can implement consensus using these objects. This makes sense, because if we can implement consensus using these objects and consensus cannot be implemented using only registers, then these objects cannot be implemented using only registers.
 
-## 4.2 Fetch&Inc
+### 4.2 Fetch&Inc
 
 The Fetch & Increment object is a counter that contains an integer. It has one operation, `fetch&inc()`, which increments the counter by 1 and returns the new value of the counter. 
 Its sequential specification is as follows
@@ -572,7 +532,7 @@ int propose(int v) { // Called by process pi
 
 Since Consensus cannot be implemented using only registers, and by the fact that we've built an algorithm that implements Consensus using only registers and Fetch&Inc, we have that Fetch&Inc cannot be implemented using only registers.
 
-## 4.3 Queue
+### 4.3 Queue
 
 The Queue is an object containter with two operations: `enq(v)` and `deq()`. It is a FIFO data structure that you can learn about on internet. Can we implement an atomic wait-free Queue using only registers ? No, because we can implement Consensus using a Queue and registers.  
 The algorithm is as follows: it uses two regisers r0 and r1, and a Queue q initialized to {"winner", "loser"}.
@@ -594,7 +554,7 @@ int propose(int v) { // Called by process pi
 }
 ```
 
-## 4.4 Test&Set
+### 4.4 Test&Set
 
 A Test & Set object maintains a binary value x initialized to 0. It provides one operation `test&set()`, which basically sets x to 1, and returns the previous value of x. Once x is set to 1, the operation doesn't have anymore impact. This object is useful for example when processes race. x can be viewed as a key, and once it is taken, it is taken forever.  
 The sequential specification is as follows:
@@ -629,7 +589,7 @@ int propose(int v) { // Called by process pi
 }
 ```
 
-## 4.5 Compare&Swap
+### 4.5 Compare&Swap
 
 The Compare & Swap object maintains a value x, initialized to `null`. It provides one operation `compare&swap(old,new)`. The operation compares x with `old`, and if they are equal assigns value `new` to x. If they are not equal the operation doesn't do anything. The operation returns the new value if x and `old` we equal, and it returns x otherwise.  
 The sequential specification is as follows:
@@ -656,7 +616,7 @@ int propose(int v) { // Called by pi
 }
 ```
 
-# 5. Universal Construction
+## 5. Universal Construction
 
 We've seen in the previous section that we can't implement any object in our concurrent context using only registers. Is there a stronger object that can be used to implement any object in our concurrent context ?
 This first requires to define what object we're looking for.
@@ -668,7 +628,7 @@ In this section, we demonstrate the power of Consensus in implementing any wait-
 
 *Before we continue, note that since Consensus is universal, then every objects that we presented in the previous section (Fetch&Inc, Compare&Swap, ...) are universal.*  
 
-## 5.1 Deterministic case
+### 5.1 Deterministic case
 
 To simplify the explanations and the algorithm, we first concentrate only on **deterministic** objects. We will see later how we can modify the algorithm presented to make it work for general (deterministic and non-deterministic) objects.  
 
@@ -702,7 +662,7 @@ Note that this algorithm only works for deterministic objects.
 An object is deterministic if, for any request R there exists a single response S associated with that request. For non-deterministic objects, for a request R there exists a set of possible responses {S1, S2, ...} for R. A good example of deterministic object vs non-deterministic object is list vs set: a list guarantees an ordering of elements according to the time elements were added, whereas a set doesn't guarantee any order.  
 One can see that the algorithm doesn't work if we consider T' to be a set. If T' is a set, then removing at a certain index in the set might behave differently from process to process because there is no defined order.  
   
-## 5.2 General (Deterministic and Non-Deterministic) Case
+### 5.2 General (Deterministic and Non-Deterministic) Case
 
 There exist adaptations to our algorithm so that it still works for non-deterministic objects.  
 One adaptation is to "restrict" the non-deterministic object to a deterministic one, i.e. we add a constraint (an ordering) in our algorithm such that for a request R, instead of having the processes give potential different responses from the set {S1, S2, ...}, they give the same response according to the constraint (the ordering), say S1. This is a valid restriction because the response given by the processes is a valid response, i.e. it still comes from the set of possible responses {S1, S2, ...} for the given request R. For example, in the case of the set, the constraint could be to add an ordering of the elements in the set, so that the set behaves as a list when accessing elements in it.  
@@ -710,7 +670,7 @@ Another different adaptation is to modify what we propose to a Consensus instanc
 
 We've just implemented an algorithm that implements any wait-free atomic object T' using only registers and Consensus :)
 
-# 6. Implementing the Consensus Object with Timing Assumptions
+## 6. Implementing the Consensus Object with Timing Assumptions
 
 We've seen that Consensus, in a completely asynchronous setting, is impossible to implement. But in practice, it is reasonable to assume some timing assumptions that are true at some point. In practice, concurrent systems are usually synchronous, and only sometimes asynchronous.  
 In this section, we implement a weaker version of Consensus, in that it assumes a timing assumption on our system.  
@@ -737,7 +697,7 @@ The way we proceed is we divide Consensus into modular parts:
 <u>**<>Leader:**</u>
 * Completeness: If a correct process invokes `leader()`, then the invocation returns and *eventually*, some correct process is *permanently* the only leader
 
-## 6.1 O-Consensus
+### 6.1 O-Consensus
 
 Now we start by implementing O-Consensus. We want to make sure that a process that is eventually "left alone" to execute steps, eventually decides. Of course we also want agreement and validity to hold. The building blocks of the algorithm are:
 * Assume N processes
@@ -782,7 +742,7 @@ P propose(P v) {
 * (3): pi announces the value it selected with its timestamp
 * (4): if pi's timestamp is the highest (meaning no other process entered (1) after pi), then pi can decide (pi knows that once it decided, any process that executes (2) will select pi's selected value).
 
-## 6.2 L-Consensus
+### 6.2 L-Consensus
 
 In this part, we implement L-Consensus using <>Leader and O-Consensus. <>Leader is the subject of the next subsection.  
 The idea is to use <>Leader to make sure that, eventually, one process keeps executing steps alone, until it decides. The difference with O-Consensus is that in O-Consensus we assume this will arrive eventually, whereas in L-Consensus we have no guarantees that it will arrive, so we force it.
@@ -812,7 +772,7 @@ P propose(P v) {
 ```
 The only change from O-Consensus algorithm is (*).  
 
-## 6.3 Consensus
+### 6.3 Consensus
 
 Assuming we have the <>Leader object, the algorithm for L-Consensus makes sure that eventually at least one process decides. To get Consensus, we want that all processes eventually decides. So to implement Consensus from L-Consensus, we can add a shared register R, that is used to display the decided value once a process decides from L-Consensus.  
 Let p be a process that eventually decides from L-Consensus. p exists because at least one process eventually decides. Let R be the shared register, initialy containing null. Once p has decided v, p writes v into R. Periodically, every processes read R. If the value read is not null, then they can decide this value.  
@@ -843,7 +803,7 @@ The only changes from L-Consensus algorithm are (\*), (\*\*) and (***).
 This enforces the constraint that, once a process has decided, eventually, all the other correct processes decide. Since by L-Consensus there is eventually one process that decides, then eventually every correct process decides.
 
 
-## 6.4 <>Leader
+### 6.4 <>Leader
 
 Finally, it remains to implement <>Leader. We state again its property:
 * Completeness: If a correct process invokes `leader()`, then the invocation returns and *eventually*, some correct process is *permanently* the only leader
@@ -911,7 +871,7 @@ void elect() {
 * So eventually, pi detects every increment `REG[j]` such that pj thinks it can be leader and it is non-crashed. More generally, every processes eventually detect any increments in `REG`. Since they will choose the smallest j such that pj made an increment, they will eventually choose the same leader. This leader will permanently be the only leader.
 * Last observation: `clock` is the time relative to how fast pi executes instructions, so when the algorithm converges to a single leader, processes might get different values of `delay`.
 
-# 7. Transactional memory
+## 7. Transactional memory
 
 Transactions are a sequence of operations that we want to execute as if they were a single atomic operation. We roughly want 
 
@@ -944,7 +904,7 @@ The transactional memory API is very simple:
 To (easily) implement transactions with locks, you can have a global lock, and each time there is a transaction, it acquires the lock in `begin` and then releases the lock in `commit`. When the lock is taken, other transactions must wait.  
 To be more efficient, we can change the granularity of locking by having the lock at each memory space, and each time a transaction wants to read or write at this space it aquires the lock. This is a bit better as transactions that work on disjoint memory spaces can execute in parallel and there is no need for waiting. Of course if their memory acceses are not disjoint then a transaction might wait for the other. This case can even be worse, as we can get a deadlock (t1 locks m1, t2 locks m2; now t1 wants to lock m2 and t2 wants to lock m1). This is why `abort`ing is useful (or clever), it will enable us to avoid deadlocks. When a transaction aborts, it tries again.  
 
-## 7.1 Two-Phase Locking
+### 7.1 Two-Phase Locking
 
 Two-phase locking encapsulates this idea of locking per memory space or per object, and unlock at commit time. In what follows we consider the granularity to be on the memory space, but on objects it would be similar.
 
@@ -999,7 +959,7 @@ To do this, we change our lock into a read-write lock:
 That way we still allow only a single write exclusive access to M, but multiple reads can concurrently access M.  
 Also note that we have to abort if the lock is taken, otherwise we risk deadlock.
 
-## 7.2 Two-Phase Locking with Invisible Reads
+### 7.2 Two-Phase Locking with Invisible Reads
 
 Now we look at a different class of transactional memory.  
 In Two-phase locking, every time we want to access a memory space, we have to acquire the lock associated to that memory space. From the point of view of the hardware, this is costly, because the information that it has been locked needs to be sent to all of the caches to invalidate the cache lines associated with the lock (the value of the lock changed). When the operation is a write, this mechanism is inevitable, because in any case we have to change the value in the memory space. But for a read, there is something to do, because the read doesn't change the value in the memory space.  
@@ -1090,7 +1050,7 @@ Let's say T1 and T2 execute concurrently. The order of instructions is as follow
 
 The example above is a good example to show that atomicity is not enough to have a correct software transactional memory when we use invisible reads. When having invisible reads, we have to be extra careful to work with a consistent memory view, and this comes at a cost. This is the tradeoff between the two classes: reads are either visible or careful.
 
-## 7.3 DSTM
+### 7.3 DSTM
 
 We haven't looked at liveness properties of our previous algorithms. How can we guarantee that eventually a transaction will commit ?  
 
@@ -1099,12 +1059,12 @@ This is what DSTM algorithm guarantees, it works the same as Two-phase locking w
 
 The modification is simple and it is easy to see that obstruction-freedom is guaranteed: whenever a transaction T wants to write at memory M, it requires the write-lock on M. If the write-lock on M is taken by transaction T', T aborts T' and acquires the write-lock.
 
-# 8. Anonymous Concurrent Computing
+## 8. Anonymous Concurrent Computing
 
 Up until now, we've seen algorithms that consider that process ids are visible. For example, process knows where it has to write in an array, and it knows where the other processes have to write.  
 This section presents concurrent algorithms that consider that processes are anonymous, i.e. no process knows who is who.
 
-## 8.1 Weak Counter
+### 8.1 Weak Counter
 
 We've [previously](#31-counter) seen how to implement a Counter in a concurrent setting. Here, we implement a weaker version of it, but in an additional setting where processes are anonymous. The only information processes have access to is the total number of processes N.
 
@@ -1117,7 +1077,7 @@ This is weaker because we are allowing the counter to be inexact, we just want s
 
 *We will see that from the implementation of `wInc()`, it is easy to implement a `read()`.*
 
-### 8.1.1 Lock-Free Implementation
+#### 8.1.1 Lock-Free Implementation
 
 Processes share an infinite array of MWMR registers `REG` all initialized to 0. An entry of the array is used like a count unit of the counter.
 
@@ -1134,7 +1094,7 @@ int wInc() {
 The above implementation is *lock-free*, meaning that if multiple processes increment concurrently, at least one of them eventually succeeds and returns (there is progress). But a slow process may never terminate, it keeps incrementing because another fast process keeps incrementing.  
 If we want to get that all concurrent inrements eventually succeed, we need to be smarter.
 
-### 8.1.2 Wait-Free Implementation
+#### 8.1.2 Wait-Free Implementation
 
 A *wait-free* implementation means that if multiple processes increment concurrently, eventually all of these processes succeed and return.  
 To achieve this, the idea is to have fast processes help slower processes find a good value to return. In order to do that, we introduce a shared MWMR register `L` (initialized to 0), which is updated when some process has found a `0` entry in `REG` (i.e. that process will eventually return).
@@ -1181,7 +1141,7 @@ int wInc() {
 }
 ```
 
-## 8.2 General Snapshot
+### 8.2 General Snapshot
 
 The Snapshot we've seen [before](#32-snapshot) assumed the array we're working on is of size N, the number of processes. Furthermore the concurrent implementation of it assumed process with id i could only write in entry i of the array.  
 
@@ -1218,7 +1178,7 @@ T[] scan() {
 ```
 * In `scan()`, the first "If" is similar to before but we need N+1 identical collects instead of just two. The second "If" is similar to before.
 
-## 8.3 Binary O-Consensus
+### 8.3 Binary O-Consensus
 
 Recall O-Consensus [here](#61-o-consensus).
 * We consider binary O-Consensus, meaning a value v takes either value 0 or 1.
