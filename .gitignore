@@ -44,3 +44,7 @@ docs/.vuepress/.cache
 docs/.vuepress/.temp
 .vuepress/.cache
 .vuepress/.temp
+
+# Local build related #
+#######################
+docs/.vuepress/dist
