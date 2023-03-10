@@ -8,10 +8,6 @@ References for building this site:
 
 TODO:
 1. Fix github pages deployment error
-2. Refactor directories to organize
 3. Get the home page kind of right
 4. Fill in the site
 5. Theme choice and beautify
-6. Make the [toc](https://v2.vuepress.vuejs.org/reference/plugin/toc.html#toc) plugin work (with numbered list instead of bulleted list)
-7. Make the sidebar header view to show only relevant headers
-8. Give page # references to Definitons, Lemmas and Theorems in the IPM page

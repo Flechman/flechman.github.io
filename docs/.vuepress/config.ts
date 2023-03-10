@@ -1,6 +1,5 @@
 import { defaultTheme } from '@vuepress/theme-default'
-import { katexPlugin } from '@renovamen/vuepress-plugin-katex' //yarn add @renovamen/vuepress-plugin-katex@next
-//import tocPlugin  from '@vuepress/plugin-toc'
+import { katexPlugin } from '@renovamen/vuepress-plugin-katex'
 
 export default {
     theme: defaultTheme({

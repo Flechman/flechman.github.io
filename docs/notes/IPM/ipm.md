@@ -115,7 +115,7 @@ D$^kf(x)[v_1,...,v_k]$ is the directional $k^{th}$ derivative of $f$ in directio
 
 Integrating the local inequality that we have from the definition, we get the following inequality, which says that locally the Hessian of a self-concordant function $f$ doesn't change too fast:  
 
-**Lemma 1:** *Let $f$ be a self-concordant function. Then $\forall x \in \text{dom}f$, and $\forall y\in\text{dom}f$ s.t. $d = {\lVert y-x \rVert}_{\nabla^2f(x)} < 1$*
+**Lemma 1:** *Let $f$ be a self-concordant function. Then $\forall x \in \text{dom}f$, and $\forall y\in\text{dom}f$ s.t. $d = {\lVert y-x \rVert}_{\nabla^2f(x)} < 1$,*
 $$
 (1-d)^2\nabla^2f(x) \preceq \nabla^2f(y) \preceq \frac{1}{(1-d)^2}\nabla^2f(x)
 $$
@@ -168,7 +168,7 @@ Notice that the amount by which we change $t$ depends on $\max_{x} {\lVert \nabl
 
 Finally, it remains to determine how small $t$ needs to be to achieve $\epsilon$-error. One can upper bound the error by using the duality gap of the problem.  
 
-**Lemma 4:** Let $\phi$ be a $\nu$-self-concordant barrier on $\mathcal{K}$, and let $\tilde{x}$ be the optimum of [$(P)$](#_3-general-framework). We have that
+**Lemma 4:** *Let $\phi$ be a $\nu$-self-concordant barrier on $\mathcal{K}$, and let $\tilde{x}$ be the optimum of [$(P)$](#_3-general-framework). We have that*
 $$
 c^{\top}x_t - c^{\top}\tilde{x} \;\leq\; t\nu
 $$
@@ -211,8 +211,108 @@ This is the topic of another note, which concentrates on the Lee-Sidford barrier
 
 ### Proof Lemma 1.
 
+Let $\alpha(\lambda) = u^{\top}\nabla^2f(x_{\lambda})^{\top}u$ with $x_{\lambda} = x + \lambda(y-x)$. Then we have that $\alpha'(\lambda) = \text{D}f(x_\lambda)[y-x, u, u]$. By self-concordance we have
+$$
+\lvert \alpha'(\lambda) \rvert \leq 2{\lVert y-x \rVert}_{\nabla^2 f(x_{\lambda})}{\lVert u \rVert}_{\nabla^2 f(x_{\lambda})}^2
+$$
+For $u = y-x$, we have $\lvert \alpha'(\lambda) \rvert \leq 2\alpha(\lambda)^{\frac{3}{2}}$. Hence we have $\frac{d}{d\lambda}\frac{1}{\sqrt{\alpha(\lambda)}} \geq -1$. Integrating both on $\lambda$ we have
+$$
+\frac{1}{\sqrt{\alpha(\lambda)}} \geq \frac{1}{\sqrt{\alpha(0)}} - \lambda = \frac{1}{\sqrt{{\lVert y-x \rVert}_{\nabla^2 f(x)}}} - \lambda
+$$
+Rearranging it gives
+$$\alpha(\lambda) \leq \frac{1}{(\frac{1}{\sqrt{{\lVert y-x \rVert}_{\nabla^2 f(x)}}}-\lambda)^2} = \frac{{\lVert y-x \rVert}_{\nabla^2 f(x)}^2}{(1-\lambda {\lVert y-x \rVert}_{\nabla^2 f(x)})^2}
+$$
+For general $u$, we can obtain
+$$\lvert \alpha'(\lambda) \rvert \leq 2\frac{{\lVert y-x \rVert}_{\nabla^2 f(x)}}{1-\lambda {\lVert y-x \rVert}_{\nabla^2 f(x)}}\alpha(\lambda)
+$$
+Rearranging gives
+$$
+\bigg| {\frac{d}{d\lambda} \text{ln}(\alpha(\lambda))} \bigg| \leq 2\frac{{\lVert y-x \rVert}_{\nabla^2 f(x)}}{1-\lambda {\lVert y-x \rVert}_{\nabla^2 f(x)}} = -2\frac{d}{d\lambda} \text{ln}(1-\lambda {\lVert y-x \rVert}_{\nabla^2 f(x)})
+$$
+Integrating from $\lambda = 0$ to $1$ gives the result.
+<hr>
+
 ### Proof Lemma 2.
+
+Lemma 1. shows that 
+$$
+\nabla^2f(x') \succeq (1-r)^2 \nabla^2f(x)
+$$
+and hence
+$$
+{\lVert \nabla f(x') \rVert}_{\nabla^2f(x')^{-1}} \leq \frac{{\lVert \nabla f(x') \rVert}_{\nabla^2f(x)^{-1}}}{1-r} \tag{*}
+$$
+To bound $\nabla f(x')$, we calculate that
+$$\begin{alignat*}{3}
+    \nabla f(x') &= \nabla f(x) + \int_0^1{\nabla^2 f(x+t(x'-x))(x'-x)}dt \nonumber\\
+    &= \nabla f(x) - \int_0^1{\nabla^2 f(x+t(x'-x))(\nabla^2 f(x))^{-1}\nabla f(x)}dt \\
+    &= \left( \nabla^2 f(x) - \int_0^1 {\nabla^2 f(x+t(x'-x))}dt \right)(\nabla^2 f(x))^{-1}\nabla f(x) \tag{**}
+\end{alignat*}$$
+For the first term in the bracket, we use Lemma 1. to get that
+$$
+(1-r+\frac{1}{3}r^2)\nabla^2 f(x) \preceq \int_0^1 {\nabla^2 f(x+t(x'-x))}dt \preceq \frac{1}{1-r}\nabla^2 f(x)
+$$
+Therefore we have
+$${\bigg\Vert (\nabla^2 f(x))^{-\frac{1}{2}} \left( \nabla^2 f(x) - \int_0^1 {\nabla^2 f(x+t(x'-x))}dt \right) (\nabla^2 f(x))^{-\frac{1}{2}} \bigg\Vert}_{\text{op}} \leq \text{max}(\frac{r}{1-r}, r-\frac{1}{3}r^2) = \frac{r}{1-r}
+$$
+Putting it into (**) gives
+$${\lVert \nabla f(x') \rVert}_{\nabla^2 f(x)^{-1}} \leq \frac{r}{1-r}\bigg\Vert (\nabla^2 f(x))^{-\frac{1}{2}}\nabla f(x) \bigg\Vert = \frac{r^2}{1-r}
+$$
+Using this inequality with (*) gives the result.
+<hr>
 
 ### Proof Lemma 3.
 
+$$
+\begin{alignat*}{3}
+    \nabla\phi_{t(1-h)}(x) &= c + t(1-h)\nabla\phi(x) \\
+    &= \nabla\phi_t(x) - t\nabla\phi(x) + t(1-h)\nabla\phi(x) \\
+    &= \nabla\phi_t(x) - th\nabla\phi(x)
+\end{alignat*}
+$$
+Taking the norm, using triangle inequality and using that $0 < t \leq 1$ and $h \geq 0$, we get
+$$
+\begin{alignat*}{3}
+    {\lVert \nabla\phi_{t(1-h)}(x) \rVert}_{\nabla^2\phi(x)^{-1}} &\leq {\lVert \nabla\phi_{t}(x) -th \nabla\phi(x) \rVert}_{\nabla^2\phi(x)^{-1}} \\
+    &\leq {\lVert \nabla\phi_{t}(x) \rVert}_{\nabla^2\phi(x)^{-1}} + th{\lVert \nabla\phi(x) \rVert}_{\nabla^2\phi(x)^{-1}} \\
+    &\leq {\lVert \nabla\phi_{t}(x) \rVert}_{\nabla^2\phi(x)^{-1}} + h{\lVert \nabla\phi(x) \rVert}_{\nabla^2\phi(x)^{-1}}
+\end{alignat*}
+$$
+<hr>
+
 ### Proof Lemma 4.
+
+We state a first lemma that will help us in the proof.  
+
+**Lemma:** *Let $\phi$ be a $\nu$-self-concordant barrier, and let $\mathcal{K}$ be the polytope defined by the constraints of [$(P)$](#_3-general-framework). Then, for any $x, y\in \mathcal{K}$*
+$$
+\langle \nabla\phi(x),(y-x) \rangle \leq \nu
+$$
+*Proof.* Let $\alpha(\lambda) = \langle \nabla\phi(x_{\lambda}),(y-x) \rangle$ where $x_{\lambda} = x + \lambda(y-x)$. Then
+$$
+\begin{alignat*}{2}
+\alpha'(\lambda) &= (y-x)^{\top}\nabla^2\phi(x_{\lambda})(y-x) \\
+&= {\lVert y-x \rVert}_{\nabla^2\phi(x_{\lambda})}^2  
+\end{alignat*}
+$$
+We also have that
+$$
+\begin{alignat*}{3}
+\alpha(\lambda) &= \langle \nabla^2\phi(x_{\lambda})^{- \frac 1 2}\nabla\phi(x_{\lambda}),\nabla^2\phi(x_{\lambda})^{\frac 1 2}(y-x) \rangle \\
+&\leq {\lVert \nabla\phi(x_{\lambda}) \rVert}_{\nabla^2\phi(x_{\lambda})^{-1}}{\lVert y-x \rVert}_{\nabla^2\phi(x_{\lambda})^{-1}} \quad \text{(by Cauchy-Schwarz inequality)}\\
+&\leq \sqrt{\nu}{\lVert y-x \rVert}_{\nabla^2\phi(x_{\lambda})^{-1}} \quad \text{(by $\nu$-self-concordance)}
+\end{alignat*}
+$$
+Combining the two, we get $\alpha(\lambda) \leq \sqrt{\nu\alpha'(\lambda)} \implies \alpha'(\lambda) \geq \frac{1}{\nu}\alpha(\lambda)^2$
+* If $\alpha(0) \leq 0$, we are done because $\nu \geq 0$ and our inequality is satisfied.
+* If $\alpha(0) > 0$, then $\alpha$ is increasing in $\lambda$, because $\phi$ is convex (and look at the monotonicity of $\nabla\phi(x_\lambda)^{\top}(y-x)$ depending on the sign of $y-x$). Thus $\alpha(1) \geq \alpha(0) > 0$.  
+Furthermore, integrating the inequality $\frac{\alpha'(\lambda)}{\alpha(\lambda)^2} \geq \frac{1}{\nu}$, we have that $\frac{1}{\alpha(1)} \leq \frac{1}{\alpha(0)}-\frac{1}{\nu}$. Thus, $\frac{1}{\alpha(0)}-\frac{1}{\nu} \geq 0$ and $\alpha(0) \leq \nu$ which gives the target inequality.  
+<br/>
+
+Now we can use this lemma to prove Lemma 4.  
+At the optimal of [$(P_t)$](#_3-general-framework) we have $\nabla\phi_t(x_t) = 0 \implies c + t\nabla\phi(x_t) = 0 \implies c = -t\nabla\phi(x_t)$. Therefore we have
+$$
+c^{\top}x_t - c^{\top}\tilde{x} = c^{\top}(x_t -\tilde{x}) = t\nabla\phi(x_t)^{\top}(\tilde{x} - x_t) \leq t\nu
+$$
+which completes the proof.
+<hr>
