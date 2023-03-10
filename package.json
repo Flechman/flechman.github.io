@@ -6,7 +6,7 @@
   "author": "Delacourt <remi.delacourt@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@renovamen/vuepress-plugin-katex": "^2.0.0-alpha.26", 
+    "@renovamen/vuepress-plugin-katex": "^2.0.0-alpha.26",
     "@vuepress/client": "2.0.0-beta.45",
     "vue": "^3.2.47",
     "vuepress": "2.0.0-beta.45"
@@ -16,7 +16,7 @@
     "build": "vuepress build docs"
   },
   "dependencies": {
-    "@renovamen/vuepress-plugin-katex": "^2.0.0-alpha.26", 
+    "@renovamen/vuepress-plugin-katex": "^2.0.0-alpha.26",
     "@vuepress/client": "2.0.0-beta.45",
     "vue": "^3.2.47",
     "vuepress": "2.0.0-beta.45"
