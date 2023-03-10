@@ -1,1 +1,0 @@
-const e={key:"v-471a53bf",path:"/notes/notes.html",title:"Notes",lang:"en-US",frontmatter:{},excerpt:"",headers:[{level:3,title:"EPFL Lecture Notes",slug:"epfl-lecture-notes",children:[]},{level:3,title:"Other",slug:"other",children:[]}],git:{updatedTime:1678484966e3},filePathRelative:"notes/notes.md"};export{e as data};
