@@ -1,4 +1,4 @@
-# Notes
+<h1 style="text-align: center;">Notes</h1>
 
 ### EPFL Lecture Notes
 * [Concurrent Algorithms](concurrent_algo/concurrent_algo.md)

@@ -7,7 +7,6 @@ References for building this site:
 * [Site-related configuration, also in config.js](https://v2.vuepress.vuejs.org/reference/config.html)
 
 TODO:
-1. Fix github pages deployment error
-3. Get the home page kind of right
-4. Fill in the site
-5. Theme choice and beautify
+1. Get the home page kind of right
+2. Fill in the site
+3. Theme choice and beautify

@@ -1,7 +1,9 @@
-import { defaultTheme } from '@vuepress/theme-default'
+//import { defaultTheme } from '@vuepress/theme-default'
 import { katexPlugin } from '@renovamen/vuepress-plugin-katex'
+import { path } from '@vuepress/utils'
+import { defaultTheme, defineUserConfig } from 'vuepress'
 
-export default {
+export default defineUserConfig({
     theme: defaultTheme({
         title: 'Rémi Delacourt',
         repo: 'https://github.com/Flechman/flechman.github.io',
@@ -19,6 +21,14 @@ export default {
         },
     }),
     plugins: [
-        katexPlugin()
+        katexPlugin(),
+        '@vuepress/plugin-register-components',
+        {
+          componentsDir: path.resolve(__dirname, './components'),
+        },
     ],
-}
+    alias: {
+        '@theme/HomeFooter.vue': path.resolve(__dirname, './components/MyHomeFooter.vue'),
+        '@theme/Home.vue': path.resolve(__dirname, './components/MyHome.vue'),
+    },
+})
