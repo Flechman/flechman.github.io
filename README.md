@@ -5,8 +5,3 @@ References for building this site:
 * [Guide - getting started](https://v2.vuepress.vuejs.org/guide/)
 * [Default theme config, related to config.js](https://v2.vuepress.vuejs.org/reference/default-theme/config.html)
 * [Site-related configuration, also in config.js](https://v2.vuepress.vuejs.org/reference/config.html)
-
-TODO:
-1. Get the home page kind of right
-2. Fill in the site
-3. Theme choice and beautify
