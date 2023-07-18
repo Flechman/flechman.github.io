@@ -1,7 +1,7 @@
 # Interior Point Methods for Solving Linear Programs
 
 * These notes are based on my semester research project in the [Theoretical Computer Science Lab](https://theory.epfl.ch/) at EPFL, where I was supervised by Prof. Dr. Kapralov and Kshiteej Sheth.
-* Having an idea of what [Linear Programs](https://en.wikipedia.org/wiki/Linear_programming) are and [Convex Optimization](https://en.wikipedia.org/wiki/Convex_optimization) is recommended before reading
+* Having an idea of what [Linear Programs](https://en.wikipedia.org/wiki/Linear_programming) are and [Convex Optimization](https://en.wikipedia.org/wiki/Convex_optimization) is recommended before reading.
 
 ## 1. Introduction \& Problem Statement
 

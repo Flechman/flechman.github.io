@@ -32,6 +32,9 @@
         opacity: 1;
     }
 }
+.frontpage {
+    animation-name: opacityTitle;
+}
 .site-title {
     width: calc(100vw);
     height: calc(100vh);
@@ -40,7 +43,6 @@
     align-items: center;
     text-align: center;
     justify-content: center;
-    animation-name: opacityTitle;
     animation-duration: 2s;
 }
 .presentation {
