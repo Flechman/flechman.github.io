@@ -1,8 +1,8 @@
 <template>
-    <div class="frontpage" style="background: url(/images/Stellisee.jpg); height: 100vh; width: 100vw; background-repeat: no-repeat;background-size: cover;background-position-x: center;background-attachment: fixed;background-blend-mode: lighten;animation: opacityTitle;animation-duration: 2s;">
+    <div class="frontpage" id="frontpage" style="height: 100vh; width: 100vw;">
         <div class="top-site-title"></div>
         <div class="site-title">
-            <h1 style="text-shadow: rgba(0, 0, 0, 0.1) 0 1px 2px;">Hey, I'm Rémi :)</h1>
+            <h1 id="welcometext" style="text-shadow: rgba(0, 0, 0, 0.1) 0 1px 2px; visibility: hidden;">Hey, I'm Rémi :)</h1>
         </div>
         <div class="bottom-site-title">
         </div>
@@ -23,6 +23,25 @@
     <div style="height: 2vh;"></div>
 </template>
 
+<script>
+    var frontImageRef = '/images/Stellisee.jpg';
+    var frontImage = new Image();
+    frontImage.src = frontImageRef;
+    frontImage.onload = function() {
+        var frontpage = document.getElementById('frontpage');
+        frontpage.style.background = 'url('+frontImageRef+')';
+        frontpage.style.backgroundRepeat = 'no-repeat';
+        frontpage.style.backgroundSize = 'cover';
+        frontpage.style.backgroundPositionX = 'center';
+        frontpage.style.backgroundAttachment = 'fixed';
+        frontpage.style.backgroundBlendMode = 'lighten';
+        frontpage.style.animation = 'opacityTitle';
+        frontpage.style.animationDuration = '2s';
+        
+        document.getElementById('welcometext').style.visibility = 'visible';
+    }
+</script>
+
 <style lang="css">
 @keyframes opacityTitle {
     0% {
@@ -31,9 +50,6 @@
     100% {
         opacity: 1;
     }
-}
-.frontpage {
-    animation-name: opacityTitle;
 }
 .site-title {
     width: calc(100vw);
