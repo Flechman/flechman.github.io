@@ -20,6 +20,24 @@ export default defineUserConfig({
             externalLinkIcon: false,
         },
     }),
+    head: [['script', {}, `
+        var frontImageRef = '/images/Stellisee.jpg';
+        var frontImage = document.createElement('img');
+        frontImage.src = frontImageRef;
+        frontImage.onload = function() {
+            var frontpage = document.getElementById('frontpage');
+            frontpage.style.background = 'url('+frontImageRef+')';
+            frontpage.style.backgroundRepeat = 'no-repeat';
+            frontpage.style.backgroundSize = 'cover';
+            frontpage.style.backgroundPositionX = 'center';
+            frontpage.style.backgroundAttachment = 'fixed';
+            frontpage.style.backgroundBlendMode = 'lighten';
+            frontpage.style.animation = 'opacityTitle';
+            frontpage.style.animationDuration = '2s';
+            
+            document.getElementById('welcometext').style.visibility = 'visible';
+        }
+    `]],
     plugins: [
         katexPlugin(),
         '@vuepress/plugin-register-components',

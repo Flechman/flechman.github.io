@@ -23,9 +23,9 @@
     <div style="height: 2vh;"></div>
 </template>
 
-<script>
+<!-- <script>
     var frontImageRef = '/images/Stellisee.jpg';
-    var frontImage = new Image();
+    var frontImage = document.createElement('img');
     frontImage.src = frontImageRef;
     frontImage.onload = function() {
         var frontpage = document.getElementById('frontpage');
@@ -40,7 +40,7 @@
         
         document.getElementById('welcometext').style.visibility = 'visible';
     }
-</script>
+</script> -->
 
 <style lang="css">
 @keyframes opacityTitle {
