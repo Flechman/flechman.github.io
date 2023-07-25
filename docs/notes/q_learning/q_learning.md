@@ -23,7 +23,7 @@ But summing infinitely many rewards can be infinite. So we slightly change our g
 The closer $\gamma$ is to 1, the more importance we give to long-term rewards, whereas when $\gamma$ is close to 0, we prioritize short-term rewards. This can be important if for example we are in a game where there are multiple short-term goals that don't end the game but a single long-term goal that ends the game.  
 
 We can now define the expected discounted cumulative reward when we start at state $s$ and follow policy $\pi$, otherwise known as the State-Value Function (V-function):
- $$V^{\pi}(s) = \mathbb{E}_{\pi}[G_t \mid s_t = s] = \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s\right]$$  
+ $$V^{\pi}(s) = \mathbb{E}_{\pi}[G_t \mid s_t = s] = \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s\right]$$   
 And finally we can state our ultimate goal:
 $$\max_{\pi}V^{\pi}(s) \quad\forall s\in\mathcal{S} \tag{1}$$
 
@@ -63,19 +63,17 @@ We'll rewrite our ultimate goal (1) as being $V^*(s)$. It is the maximum expecte
 Similarly, $Q^*(s,a)$ is the the maximum expected (discounted) reward that we wan obtain by taking action $a$ from state $s$, with optimal play. $Q^*(s,a) = Q^{\pi^*}(s,a) = \max_{\pi}Q^{\pi}(s,a)$.  
 Note that there can be multiple optimal policies that give the same optimal value, i.e. $\pi^*$ may not be unique.  
 
-We now give a policy and argue that it is optimal
+We now give a policy and argue that it is optimal:
+$$\pi(a\mid s) = \begin{cases}
+      1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
+      0, & \text{otherwise}
+    \end{cases}$$
 
-An optimal policy will favor the action that gives the highest Q-value so it will tend to probabilities in {0, 1}, unless some actions have equal highest Q-Values, in which case the probabilities for these actions will be equal and between 0 and 1 (and choosing either of them is optimal) while the others will have probability 0.  
+An optimal policy will favor the action that gives the highest Q-value so it will converge to probabilities in {0, 1}, unless some actions have equal highest Q-Values, in which case the probabilities for these actions will be equal and between 0 and 1 (and choosing either of them is optimal) while the other actions with lower Q-values will have probability 0.  
 
 We can derive the following important property:
 $$V^*(s) = \max_{\pi}V^{\pi}(s) = \max_{\pi}\sum_{a\in\mathcal{A}(s)}{\pi(a\mid s)Q^{\pi}(s,a)} = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
 This is extremely useful, because if we follow an optimal policy, we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal (1). So computing the optimal Q-values comes back to achieving our goal.  
-
-So the greedy policy of choosing the action which gives the highest Q-value given state $s$ is an optimal policy. Formally,
-$$\pi(a\mid s) = \begin{cases}
-      1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
-      0, & \text{otherwise}
-    \end{cases} \quad\quad \text{is optimal.}$$
 
 Bellman optimality equation for $Q^*$:
 $$Q^*(s,a) = R(s,a) +\gamma\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\max_{a'\in\mathcal{A}(s')}}Q^*(s',a')$$
