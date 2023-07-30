@@ -2,6 +2,7 @@
 * These notes present a [Reinforcement Learning](https://en.wikipedia.org/wiki/Reinforcement_learning) algorithm, namely 
 Q-Learning
 * Having a Probability, Stochastics and Machine Learning foundation is recommended before reading.
+* You do not need to be familiar with Dynamic Programming in the context of Reinforcement Learning.
 
 ## Introduction
 
@@ -14,7 +15,8 @@ The goal of Q-learning is to learn a certain measure of quality of actions given
 - We assume that we don't know the environment's dynamics (model free), so we don't know the state transition $p(s_{t+1}\mid s_t, a_t)$ $\;\forall s_{t+1}\in \mathcal{S}$. In other words, from $s_t, a_t$ we cannot infer anything on $s_{t+1}$.  
 - We note $\mathcal{S}$ the observable state space, $\mathcal{A}$ the action space. $\mathcal{A}(s)$ is the action space when the state of the environment is $s$, and $\mathcal{A}(s) \subseteq \mathcal{A}$. 
 - $R: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ is the reward function, and $r_t = R(s_t, a_t)$. Usually the notation $r_t$ will be used to denote a random variable that depends on the event $(s_t, a_t)$.
-- We note a policy $\pi$ to be a strategy for the agent. We model it as a probability distribution and $\pi(a_t\mid s_t) = p(a_t\mid s_t) \in [0, 1]$.
+- We define a policy $\pi$ to be a strategy for the agent. We model it as a function $\pi: \mathcal{A}\times\mathcal{S} \rightarrow [0,1]$ such that for every $s\in\mathcal{S}$, $\sum_{a\in\mathcal{A}(s)} = 1$, so that it defines, for every choice of $s\in\mathcal{S}$ a probability distribution over $\mathcal{A}(s)$, and we denote it with $\pi(a\mid s)$. 
+- The notation $\mathbb{E}_{\pi}[...]$ means that we sample all actions according to $\pi$, and all states are sampled according to state transition.
 
 Let's start with what we want to achieve. From a state $s$, we want to maximize the expected cumulative reward of our course of action. The expected cumulative reward is what we should obtain on average if we start at a state $s$ and follow our policy to perform actions. The expected cumulative reward is defined as $\mathbb{E}\left[\sum_{i=0}^{\infty}{r_{t+i}} \mid s_t=s\right]$ so our goal is:
 $$\max_{\pi}\mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{r_{t+i}} \mid s_t=s\right]$$
@@ -57,23 +59,44 @@ V^{\pi}(s) &= \mathbb{E}_{\pi}[G_t \mid s_t = s]\\
 \end{alignat*}$$
 
 $$\Rightarrow \quad V^{\pi}(s) = \sum_{a\in \mathcal{A}(s)}{\pi(a\mid s)}Q^{\pi}(s,a)$$
+The above equation is important. It describes the relationship between two fundamental value functions in Reinforcement Learning. It is valid for any policy. Let's see if we can simplify it when we use the optimal policy $\pi^{*}$.
+
+Let's define what an optimal policy is by first defining a partial ordering between policies:  
+Let $\pi_1$, $\pi_2$ be two policies. Then,
+$$\pi_1 \geq \pi_2 \quad\Leftrightarrow \quad\forall s\in\mathcal{S}\;\;V^{\pi_1}(s) \geq V^{\pi_2}(s)$$
+Some policies might not be comparable, for example if there exists $s_1, s_2$ in $\mathcal{S}$ such that $V^{\pi_1}(s_1) > V^{\pi_2}(s_1)$ but $V^{\pi_1}(s_2) < V^{\pi_2}(s_2)$.  
+An optimal policy $\pi^*$ is one that is comparable with any other policy $\pi$, and such that $\pi^* \geq \pi$.
+
+A result that we won't prove here but that we'll be using is that in our setting $\pi^*$ always exists, moreover there alway exists a deterministic policy that is optimal. Also note that there can be multiple optimal policies that give the same optimal value, i.e. $\pi^*$ may not be unique.  
+
+We can rewrite our ultimate goal (1) as being $V^*(s) = V^{\pi^*}(s) = \max_{\pi}V^{\pi}(s)$. It is the optimal State-Value Function.  
+Similarly, the optimal Action-Value Function is $Q^*(s,a) = Q^{\pi^*}(s,a) = \max_{\pi}Q^{\pi}(s,a)$.  
+
+We will now derive an important result, which says that to obtain the values of the optimal V-function, we can concentrate on getting the values of the optimal Q-function. To help derive this important result, we first give the following lemma.
+
+Lemma (policy improvement): If $\exists \bar{s}\in\mathcal{S}$ such that $V^{\pi}(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}(\bar{s},a)}$, then 
+$$\exists \pi' \;s.t.\quad V^{\pi}(s) = V^{\pi'}(s) \;\;\forall s\in\mathcal{S}\setminus\{\bar{s}\} \quad\text{and}\quad V^{\pi}(\bar{s})<V^{\pi'}(\bar{s})$$
+
+Proof:  
+Let $\bar{a} = \arg\max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}(\bar{s},a)}$.  
+Let $\pi'(a\mid s) = \begin{cases}\pi(a\mid s), & \text{if}\ s\neq\bar{s} \\1, & \text{if}\ s=\bar{s} \text{ and } a=\bar{a} \\0, & \text{otherwise}\end{cases}$  
+
+* $\forall s\in\mathcal{S}\setminus\{\bar{s}\}: V^{\pi}(s)=V^{\pi'}(s)$ because $s\neq\bar{s}$ so $\pi'(a\mid s) = \pi(a\mid s)$.
+* If $s=\bar{s}$, $V^{\pi}(\bar{s}) = \sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} < \sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid\bar{s})Q^{\pi}(\bar{s},a)}$  
+because (lemma assumption) $$\sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} = Q^{\pi}(\bar{s},\bar{a}) = \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}}(\bar{s},a) > V^{\pi}(\bar{s})$$  
 
 
-We'll rewrite our ultimate goal (1) as being $V^*(s)$. It is the maximum expected (discounted) cumulative reward that we can obtain from state $s$, with optimal play ($\pi^*$). We write $V^*(s) = V^{\pi^*}(s) = \max_{\pi}V^{\pi}(s)$.  
-Similarly, $Q^*(s,a)$ is the the maximum expected (discounted) reward that we wan obtain by taking action $a$ from state $s$, with optimal play. $Q^*(s,a) = Q^{\pi^*}(s,a) = \max_{\pi}Q^{\pi}(s,a)$.  
-Note that there can be multiple optimal policies that give the same optimal value, i.e. $\pi^*$ may not be unique.  
+We can derive the following important property:
+$$V^*(s) = \max_{\pi}V^{\pi}(s) = \max_{\pi}\sum_{a\in\mathcal{A}(s)}{\pi(a\mid s)Q^{\pi}(s,a)} = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
+This is extremely useful, because if we follow an optimal policy, we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal (1). So computing the optimal Q-values comes back to achieving our goal.  
 
-We now give a policy and argue that it is optimal:
+We now give the greedy policy and argue that it is optimal (by proving that behaving greedily with respect to an optimal value function is an optimal policy, see https://ai.stackexchange.com/questions/34744/what-is-the-difference-between-a-greedy-policy-and-an-optimal-policy, choosing the max Q-value maximizes the expected cumulative reward):
 $$\pi(a\mid s) = \begin{cases}
       1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
       0, & \text{otherwise}
     \end{cases}$$
 
 An optimal policy will favor the action that gives the highest Q-value so it will converge to probabilities in {0, 1}, unless some actions have equal highest Q-Values, in which case the probabilities for these actions will be equal and between 0 and 1 (and choosing either of them is optimal) while the other actions with lower Q-values will have probability 0.  
-
-We can derive the following important property:
-$$V^*(s) = \max_{\pi}V^{\pi}(s) = \max_{\pi}\sum_{a\in\mathcal{A}(s)}{\pi(a\mid s)Q^{\pi}(s,a)} = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
-This is extremely useful, because if we follow an optimal policy, we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal (1). So computing the optimal Q-values comes back to achieving our goal.  
 
 Bellman optimality equation for $Q^*$:
 $$Q^*(s,a) = R(s,a) +\gamma\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\max_{a'\in\mathcal{A}(s')}}Q^*(s',a')$$
