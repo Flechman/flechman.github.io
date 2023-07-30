@@ -58,7 +58,7 @@ V^{\pi}(s) &= \mathbb{E}_{\pi}[G_t \mid s_t = s]\\
 &= \sum_{a\in \mathcal{A}(s_t)}{\pi(a_t=a\mid s_t=s)\mathbb{E}_{\pi}[G_t \mid s_t = s,a_t=a]}
 \end{alignat*}$$
 
-$$\Rightarrow \quad V^{\pi}(s) = \sum_{a\in \mathcal{A}(s)}{\pi(a\mid s)}Q^{\pi}(s,a)$$
+$$\Rightarrow \quad V^{\pi}(s) = \sum_{a\in \mathcal{A}(s)}{\pi(a\mid s)}Q^{\pi}(s,a)\tag{$**$}$$
 The above equation is important. It describes the relationship between two fundamental value functions in Reinforcement Learning. It is valid for any policy. Let's see if we can simplify it when we use the optimal policy $\pi^{*}$.
 
 Let's define what an optimal policy is by first defining a partial ordering between policies:  
@@ -95,7 +95,7 @@ $$\begin{alignat*}{7}
     &=\mathbb{E}_{\pi'}[r_t + \gamma V^{\pi}(s_{t+1}) \mid s_t=\bar{s}] \quad\text{following our notation}\\
     &\leq \mathbb{E}_{\pi'}[r_t + \gamma Q^{\pi}(s_{t+1}, a_{t+1}) \mid s_t=\bar{s}]\\
 \end{alignat*}$$  
-The last inequality is obtained with the fact that $V^{\pi}(s_{t+1}) = \mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]$, and if $s_{t+1}\neq \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]=\mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$, but if $s_{t+1} = \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]\leq \max_{a\in\mathcal{A(s_{t+1})}}{Q^{\pi}(s_{t+1}, a)} = \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Thus $V^{\pi}(s_{t+1}) \leq \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Then the expectation repeats so we can remove it.  
+The last inequality is obtained with the fact that $V^{\pi}(s_{t+1}) = \mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]$, and if $s_{t+1}\neq \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]=\mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$, but if $s_{t+1} = \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]\leq \max_{a\in\mathcal{A(s_{t+1})}}{Q^{\pi}(s_{t+1}, a)} = \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Thus $V^{\pi}(s_{t+1}) \leq \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Then the expectation is redundant so we can remove it.  
 Repeating the above reasonning we obtain 
 $$\begin{alignat*}{7}
     \mathbb{E}_{\pi'}[r_t + \gamma V^{\pi}(s_{t+1}) \mid s_t=\bar{s}] &\leq \mathbb{E}_{\pi'}[r_t + \gamma Q^{\pi}(s_{t+1}, a_{t+1}) \mid s_t=\bar{s}]\\
@@ -108,10 +108,15 @@ $$\begin{alignat*}{7}
 So finally
 $$V^{\pi}(\bar{s}) < V^{\pi'}(\bar{s})$$
 
+Now we are ready to state our important result:
 
+$$\forall s\in\mathcal{S}, \quad V^*(s) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
 
-We can derive the following important property:
-$$V^*(s) = \max_{\pi}V^{\pi}(s) = \max_{\pi}\sum_{a\in\mathcal{A}(s)}{\pi(a\mid s)Q^{\pi}(s,a)} = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
+Proof:
+* Since $(**)$ is valid for any policy, it is valid for an optimal policy. So $V^*(s) = \sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,a)}$. Let $\bar{a}=\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$. Then $\sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,a)} \leq \sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,\bar{a})} = Q^*(s,\bar{a}) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$. Thus $V^*(s) \leq \max_{a\in\mathcal{A}(s)}Q^*(s,a)$.
+* We now prove that $V^*(s) \geq \max_{a\in\mathcal{A}(s)}Q^*(s,a) \; \forall s\in\mathcal{S}$ by contradiction. So assume that $\exists \bar{s}\in\mathcal{S}: \;V^*(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}Q^*(\bar{s},a)$.  
+By our previous lemma, this means that there exists $\pi'$ such that $V^*(\bar{s})<V^{\pi'}(\bar{s})$, which means $\pi^*$ is not optimal $\Rightarrow$ Contradiction.
+
 This is extremely useful, because if we follow an optimal policy, we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal (1). So computing the optimal Q-values comes back to achieving our goal.  
 
 We now give the greedy policy and argue that it is optimal (by proving that behaving greedily with respect to an optimal value function is an optimal policy, see https://ai.stackexchange.com/questions/34744/what-is-the-difference-between-a-greedy-policy-and-an-optimal-policy, choosing the max Q-value maximizes the expected cumulative reward):
