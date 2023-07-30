@@ -84,6 +84,30 @@ Let $\pi'(a\mid s) = \begin{cases}\pi(a\mid s), & \text{if}\ s\neq\bar{s} \\1, &
 * $\forall s\in\mathcal{S}\setminus\{\bar{s}\}: V^{\pi}(s)=V^{\pi'}(s)$ because $s\neq\bar{s}$ so $\pi'(a\mid s) = \pi(a\mid s)$.
 * If $s=\bar{s}$, $V^{\pi}(\bar{s}) = \sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} < \sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid\bar{s})Q^{\pi}(\bar{s},a)}$  
 because (lemma assumption) $$\sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} = Q^{\pi}(\bar{s},\bar{a}) = \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}}(\bar{s},a) > V^{\pi}(\bar{s})$$  
+Without loss of generality, let $t$ be the current timestep.  
+Let $Q^{\pi}(s_t,a_t)$ be the random variable associated with the Q-value depending on state $s_t$ and action $a_t$, following policy $\pi$ onwards.  
+Let $V^{\pi}(s_t)$ be the random variable associated with the V-function value depending on state $s_t$, following policy $\pi$ onwards.  
+In what follows, we use multiple times the links derived between the Q-function and the V-function.  
+$$\begin{alignat*}{7}
+    V^{\pi}(\bar{s}) &< \sum_{a_t\in\mathcal{A}(\bar{s})}{\pi'(a_t\mid \bar{s})Q^{\pi}(\bar{s},a_t)}\\
+    &= \mathbb{E}_{\pi'}[Q^{\pi}(s_t,a_t) \mid s_t=\bar{s}]\\
+    &=\mathbb{E}_{\pi'}[r_t + \gamma\mathbb{E}_{p}[V^{\pi}(s_{t+1})] \mid s_t=\bar{s}]\\
+    &=\mathbb{E}_{\pi'}[r_t + \gamma V^{\pi}(s_{t+1}) \mid s_t=\bar{s}] \quad\text{following our notation}\\
+    &\leq \mathbb{E}_{\pi'}[r_t + \gamma Q^{\pi}(s_{t+1}, a_{t+1}) \mid s_t=\bar{s}]\\
+\end{alignat*}$$  
+The last inequality is obtained with the fact that $V^{\pi}(s_{t+1}) = \mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]$, and if $s_{t+1}\neq \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]=\mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$, but if $s_{t+1} = \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]\leq \max_{a\in\mathcal{A(s_{t+1})}}{Q^{\pi}(s_{t+1}, a)} = \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Thus $V^{\pi}(s_{t+1}) \leq \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Then the expectation repeats so we can remove it.  
+Repeating the above reasonning we obtain 
+$$\begin{alignat*}{7}
+    \mathbb{E}_{\pi'}[r_t + \gamma V^{\pi}(s_{t+1}) \mid s_t=\bar{s}] &\leq \mathbb{E}_{\pi'}[r_t + \gamma Q^{\pi}(s_{t+1}, a_{t+1}) \mid s_t=\bar{s}]\\
+    &= \mathbb{E}_{\pi'}[r_t + \gamma r_{t+1} + \gamma^2 V^{\pi}(s_{t+2}) \mid s_t=\bar{s}]\\
+    &\leq \mathbb{E}_{\pi'}[r_t + \gamma r_{t+1} + \gamma^2 Q^{\pi}(s_{t+2},a_{t+2}) \mid s_t=\bar{s}]\\
+    &\;\;\vdots\\
+    &\leq \mathbb{E}_{\pi'}[G_t \mid s_t=\bar{s}]\\
+    &= V^{\pi'}(\bar{s})
+\end{alignat*}$$  
+So finally
+$$V^{\pi}(\bar{s}) < V^{\pi'}(\bar{s})$$
+
 
 
 We can derive the following important property:
