@@ -6,7 +6,7 @@ Q-Learning
 
 ## Introduction
 
-The goal of Q-learning is to learn a certain measure of quality of actions given states. 
+The goal of Q-Learning is to learn a certain measure of quality of actions given states. 
 
 ## Framework
 
@@ -117,37 +117,34 @@ Proof:
 * We now prove that $V^*(s) \geq \max_{a\in\mathcal{A}(s)}Q^*(s,a) \; \forall s\in\mathcal{S}$ by contradiction. So assume that $\exists \bar{s}\in\mathcal{S}: \;V^*(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}Q^*(\bar{s},a)$.  
 By our previous lemma, this means that there exists $\pi'$ such that $V^*(\bar{s})<V^{\pi'}(\bar{s})$, which means $\pi^*$ is not optimal $\Rightarrow$ Contradiction.
 
-This is extremely useful, because if we follow an optimal policy, we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal (1). So computing the optimal Q-values comes back to achieving our goal.  
-
-We now give the greedy policy and argue that it is optimal (by proving that behaving greedily with respect to an optimal value function is an optimal policy, see https://ai.stackexchange.com/questions/34744/what-is-the-difference-between-a-greedy-policy-and-an-optimal-policy, choosing the max Q-value maximizes the expected cumulative reward):
-$$\pi(a\mid s) = \begin{cases}
-      1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
-      0, & \text{otherwise}
-    \end{cases}$$
-
-An optimal policy will favor the action that gives the highest Q-value so it will converge to probabilities in {0, 1}, unless some actions have equal highest Q-Values, in which case the probabilities for these actions will be equal and between 0 and 1 (and choosing either of them is optimal) while the other actions with lower Q-values will have probability 0.  
+This is extremely useful, because we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal (1). So computing the optimal Q-values comes back to achieving our goal.  
+The whole idea of Q-Learning is learning these optimal Q-values. To put in place our learning framework, we first derive a recursive formula for the optimal Q-function, called the Bellman optimality equation.
 
 Bellman optimality equation for $Q^*$:
 $$Q^*(s,a) = R(s,a) +\gamma\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\max_{a'\in\mathcal{A}(s')}}Q^*(s',a')$$
 This is obtained by noting that $(*)$ works in particular with $\pi^*$, and by combining it with $V^*(s)=\max_{a\in\mathcal{A}(s)}Q^*(s,a)$.  
 
-This means that choosing the action which gives the highest Q-value is an optimal policy.
+Let $\tilde{Q}$ be the function obtained from learning $Q^*$.  
+The Bellman optimality equation will help us learn $Q^*(s,a)$ for all $s\in\mathcal{S}, a\in\mathcal{A}(s)$ because our learning objective is minimizing the following error measure:
 
-Computing $Q^*$ directly is generally impractical.
-So we approximate $Q^*$ by solving numerically the Bellman optimality equation. To do this we learn $Q^*(s,a)$ for all $s\in\mathcal{S}, a\in\mathcal{A}(s)$ iterativelly to obtain the approximation $\tilde{Q}$.
-
-To evaluate our approximation, we look at the Bellman error, which is simply the difference between the current Q-value when we're at $s_t$ and we're about to take $a_t$, and the Q-value computed once we observe the next state $s_{t+1}$:
 $$B(s_t,a_t,s_{t+1}) = \tilde{Q}(s_t,a_t) \;-\; \underbrace{(R(s_t,a_t) + \gamma\max_{a\in\mathcal{A}(s_{t+1})}\tilde{Q}(s_{t+1},a))}_{\text{Computed once we can observe}\ s_{t+1}}$$
-Intuitively, the Bellman error is the update to our expected reward when we observe $s_{t+1}$.  
+It is the Bellman error, which is simply the difference between the current Q-value when we're at $s_t$ and about to take $a_t$, and the Q-value computed once we observe the next state $s_{t+1}$. Intuitively, the Bellman error is the update to our expected reward when we observe $s_{t+1}$. The part underlined is the RHS of the Bellman optimality equation, but knowing $s'=s_{t+1}$.  
 
 Q-Learning is an algorithm that repeatedly adjusts $\tilde{Q}$ to minimize the Bellman error. At timestep $t+1$, we sample the tuple $(s_t, a_t, s_{t+1})$ and adjust $\tilde{Q}$ as follows:
-$$\tilde{Q}(s_t,a_t) \leftarrow \tilde{Q}(s_t,a_t) - \alpha B(s_t,a_t,s_{t+1})$$
-Where $\alpha$ is a learning rate, to average among all the different observations $(s_t,a_t,s_{t+1})$. If $\alpha =1$, we only adjust to take into account the newest value we've computed. In practice $\alpha$ will be close to 0 (for example 0.01) because we will have a good amount of training samples to average on.
+$$\tilde{Q}(s_t,a_t) \leftarrow \tilde{Q}(s_t,a_t) - \alpha_t B(s_t,a_t,s_{t+1})$$
+Where $\alpha_t$ is a learning rate. In practice $\alpha_t$ will be close to 0.  
+Now we state the theoretical constraints under which Q-Learning converges, but we do not give the proof as 
 
-We know that by following an optimal policy we obtain the optimal Q-values. 
-We have an optimal policy $\pi^*$, but we need to learn the Q-values. By following the learning procedure with $\pi^*$ we guarantee that the Q-values we learn are the optimal Q-values. And these optimal Q-values validate the optimality of our policy when choosing an action, and we reach our ultimate goal of maximizing the expected (discounted) cumularive reward given a state $s$ (this closes the loop).
+WRITE HERE
 
-Note that Q-Learning only learns about the states and actions it visits. When our agent chooses actions based on the optimal policy, it might never go into certain states, and thus it misses some information that would help get closer to $Q^*$. This is the exploration-exploitation tradeoff: the agent should sometimes choose suboptimal actions in order to visit new states and actions.  
+Currently, the agent chooses an action to satisfy the equation $V^*(s) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$, so it always chooses $\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$. Formally, the policy the agent follows is
+$$\pi(a\mid s) = \begin{cases}
+      1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
+      0, & \text{otherwise}
+    \end{cases}$$
+By identifying the Bellman optimality equation with the Bellman equation in Appendix, we can conclude that this is in fact an optimal policy.
+
+Note that Q-Learning only learns about the states and actions it visits. When our agent chooses actions, it might never go into certain states, and thus it misses some information that would help get closer to $Q^*$. This is the exploration-exploitation tradeoff: the agent should sometimes choose suboptimal actions in order to visit new states and actions.  
 This tradeoff is handled by changing the greedy policy into an $\epsilon$-greedy policy. The idea is that with probability $1-\epsilon$ we apply our greedy policy, and with probability $\epsilon$ we choose an action uniformly at random. Formally, this gives the following policy:
 $$
 \pi(a\mid s) = \begin{cases}
@@ -162,9 +159,10 @@ Deep Q-Learning: Have a neural network approximate the Q-function. As input, a r
 
 
 
-
+---
 Now, we want to choose actions that put the agent in a state where the expected (discounted) reward is the highest possible. The State-Value function gives you the expected discounted reward when the agent is in a specific state. It gives an appreciation of the state the agent is in. Q-Learning aims at choosing states that maximize this value. But to choose a state, we need to perform an action. In math language, if we're in $s_t$ and $s_{t+1}$ gives a good expected (discounted) reward, we need to choose the appropriate $a_t$ that gets the agent to $s_{t+1}$. We can't aim at a certain $s_{t+1}$, because we don't have access to it even when choosing action $a_t$ (model-free assumption). This is where the Q-function comes into place, which uses only $s_t$ and $a_t$, and directly links to the State-value function (which is our target of maximization). Intuitively, the Q-function gives measure of the quality of an action. We'll see that from $s_t$, choosing the action that gives the highest value in the Q-function, in math terms choosing $\arg\max_a Q(s_t, a)$ results in choosing $s_{t+1}$ that gives the highest $V(s_{t+1})$ for $t+1$.
 
+---
 We can also derive the Bellman equation of the Q-Function:
 $$\begin{alignat*}{6}
 Q^{\pi}(s,a) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s,a_t=a\right]\\
@@ -177,6 +175,8 @@ Q^{\pi}(s,a) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mi
 
 $$\Rightarrow \quad Q^{\pi}(s,a)= R(s,a)+\gamma\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\sum_{a'\in\mathcal{A}(s')}{\pi(a'|s')Q^{\pi}(s',a')}}$$
 
+
+---
 Let's first rewrite the V-function in a recusive manner, which is called the Bellman equation of the State-Value Function: 
 $$\begin{alignat*}{7}
     V^{\pi}(s) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}}\mid s_t=s\right] \quad\quad \text{Note that $r_{t+i}$ is a random variable.}\\
@@ -189,3 +189,11 @@ $$\begin{alignat*}{7}
 \end{alignat*}$$
 So we obtain the following (simplifying the notation)
 $$\Rightarrow \quad V^{\pi}(s)=\sum_{a\in\mathcal{A(s)}}{\pi(a\mid s)\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\left(R(s,a)+\gamma V^{\pi}(s')\right)}}$$
+
+---
+$$\pi(a\mid s) = \begin{cases}
+      1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
+      0, & \text{otherwise}
+    \end{cases}$$
+
+An optimal policy will favor the action that gives the highest Q-value so it will converge to probabilities in {0, 1}, unless some actions have equal highest Q-Values, in which case the probabilities for these actions will be equal and between 0 and 1 (and choosing either of them is optimal) while the other actions with lower Q-values will have probability 0.

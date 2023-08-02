@@ -1,6 +1,6 @@
 # IPM Part 2: The Lee-Sidford Barrier
 
-* These notes are based on my semester research project in the [Theoretical Computer Science Lab](https://theory.epfl.ch/) at EPFL, where I was supervised by Prof. Dr. Kapralov and Kshiteej Sheth.
+* These notes are based on my semester research project in the [Theoretical Computer Science Lab](https://theory.epfl.ch/) at EPFL, where I was supervised by Prof. Kapralov and Kshiteej Sheth.
 * To understand the context in which the objects presented here are used, read my notes on [Interior Point Methods](../IPM/ipm.md).
 
 ## 1. Warm-Up: The Logarithmic Barrier
