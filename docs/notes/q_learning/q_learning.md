@@ -14,7 +14,7 @@ The goal of Q-Learning is to learn a certain measure of quality of actions given
 - The state transition follows a distribution $p(s_{t+1}\mid s_t, a_t)$ $\;\forall s_{t+1}\in \mathcal{S}$, and we assume to have the markov property $p(s_{t+1}\mid s_0, a_0, ..., s_t, a_t) = p(s_{t+1}\mid s_t, a_t)$.
 - We assume that we don't know the environment's dynamics (model free), so we don't know the state transition $p(s_{t+1}\mid s_t, a_t)$ $\;\forall s_{t+1}\in \mathcal{S}$. In other words, from $s_t, a_t$ we cannot infer anything on $s_{t+1}$.  
 - We note $\mathcal{S}$ the observable state space, $\mathcal{A}$ the action space. $\mathcal{A}(s)$ is the action space when the state of the environment is $s$, and $\mathcal{A}(s) \subseteq \mathcal{A}$. 
-- $R: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ is the reward function, and $r_t = R(s_t, a_t)$. Usually the notation $r_t$ will be used to denote a random variable that depends on the event $(s_t, a_t)$.
+- $R: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ is the reward function, and $r_t = R(s_t, a_t)$. The notation $r_t$ will be used to denote a random variable that depends on the event $(s_t, a_t)$, and $R(s_t, a_t)$ will be used when we know its value (i.e. when we know $s_t$ and $a_t$).
 - We define a policy $\pi$ to be a strategy for the agent. We model it as a function $\pi: \mathcal{A}\times\mathcal{S} \rightarrow [0,1]$ such that for every $s\in\mathcal{S}$, $\sum_{a\in\mathcal{A}(s)} = 1$, so that it defines, for every choice of $s\in\mathcal{S}$ a probability distribution over $\mathcal{A}(s)$, and we denote it with $\pi(a\mid s)$. 
 - The notation $\mathbb{E}_{\pi}[...]$ means that we sample all actions according to $\pi$, and all states are sampled according to state transition.
 
@@ -85,11 +85,9 @@ Let $\pi'(a\mid s) = \begin{cases}\pi(a\mid s), & \text{if}\ s\neq\bar{s} \\1, &
 * If $s=\bar{s}$, $V^{\pi}(\bar{s}) = \sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} < \sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid\bar{s})Q^{\pi}(\bar{s},a)}$  
 because (lemma assumption) $$\sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} = Q^{\pi}(\bar{s},\bar{a}) = \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}}(\bar{s},a) > V^{\pi}(\bar{s})$$  
 Without loss of generality, let $t$ be the current timestep.  
-Let $Q^{\pi}(s_t,a_t)$ be the random variable associated with the Q-value depending on state $s_t$ and action $a_t$, following policy $\pi$ onwards.  
-Let $V^{\pi}(s_t)$ be the random variable associated with the V-function value depending on state $s_t$, following policy $\pi$ onwards.  
 In what follows, we use multiple times the links derived between the Q-function and the V-function.  
 $$\begin{alignat*}{7}
-    V^{\pi}(\bar{s}) &< \sum_{a_t\in\mathcal{A}(\bar{s})}{\pi'(a_t\mid \bar{s})Q^{\pi}(\bar{s},a_t)}\\
+    V^{\pi}(\bar{s}) &< \sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid \bar{s})Q^{\pi}(\bar{s},a)}\\
     &= \mathbb{E}_{\pi'}[Q^{\pi}(s_t,a_t) \mid s_t=\bar{s}]\\
     &=\mathbb{E}_{\pi'}[r_t + \gamma\mathbb{E}_{p}[V^{\pi}(s_{t+1})] \mid s_t=\bar{s}]\\
     &=\mathbb{E}_{\pi'}[r_t + \gamma V^{\pi}(s_{t+1}) \mid s_t=\bar{s}] \quad\text{following our notation}\\
@@ -132,10 +130,21 @@ It is the Bellman error, which is simply the difference between the current Q-va
 
 Q-Learning is an algorithm that repeatedly adjusts $\tilde{Q}$ to minimize the Bellman error. At timestep $t+1$, we sample the tuple $(s_t, a_t, s_{t+1})$ and adjust $\tilde{Q}$ as follows:
 $$\tilde{Q}(s_t,a_t) \leftarrow \tilde{Q}(s_t,a_t) - \alpha_t B(s_t,a_t,s_{t+1})$$
-Where $\alpha_t$ is a learning rate. In practice $\alpha_t$ will be close to 0.  
-Now we state the theoretical constraints under which Q-Learning converges, but we do not give the proof as 
+Where $\alpha_t$ is a learning rate. In practice $\alpha_t$ will be close to 0 and stricly less than 1 to take into account previous updates.  
 
-WRITE HERE
+Now we state the theoretical constraints under which Q-Learning converges, which helps motivate implementation choices of Q-Learning in practice. The proof of convergence is not given here, but the paper for the proof can be found in the [Reference 1](#references). 
+
+<ins>Convergence of Q-Learning: </ins> Let $t^{i}(s,a)$ be the timestep of the $i^{\text{th}}$ time that we're in state $s$ and we take action $a$.
+$\tilde{Q}$ converges almost surely towards $Q^*$ as long as
+$$\sum_{i=0}^{\infty}{\alpha_{t^{i}(s,a)}}=\infty \quad\text{and}\quad \sum_{i=0}^{\infty}{\left[\alpha_{t^{i}(s,a)}\right]^2}<\infty\quad\forall s\in\mathcal{S},a\in\mathcal{A}$$
+
+The convergence is almost surely because we have random variables $s_t,s_{t+1}$ and $a_t$.  
+This statement reveals 2 constraints:
+1. The learning rates for each state-action pair $(s,a)$ must converge towards 0, but not too quickly.
+2. Because $\alpha_t$ is bounded for all $t$, all state-action pair $(s,a)$ must be visited infinitely often.  
+
+So in an ideal world, the space $\mathcal{S}\times\mathcal{A}$ is small enough such that we can rapidly visit every state-action pair (following whatever the policy we choose). To get a good approximation, we can repeat the process to visit multiple times the 
+In traditional machine learning, we need to concentrate on exploring the most state-action pairs we can, and then repeat the learning process on them. But in reinforcement learning, you have to alternate between giving your best behavior until now and behaving to favor the exploration of new state-action pairs.
 
 Currently, the agent chooses an action to satisfy the equation $V^*(s) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$, so it always chooses $\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$. Formally, the policy the agent follows is
 $$\pi(a\mid s) = \begin{cases}
@@ -157,7 +166,9 @@ Typically, $\epsilon$ changes as we go through training. It starts with a value 
 Tabluar Q-Learning: We store the Q-function in a table and do a lookup when accessing the Q-Values. There is 1 Q-Value to learn per $(s,a)$ tuple, so the number of Q-Values to learn can go up to $\mathcal{S}\times\mathcal{A}$. In practice, $\lvert \mathcal{S} \rvert$ is exponentially big, so having to store all the Q-values in a table is impractical. It would be better to have a limited-size parameterized function that approximates the Q-function.  
 Deep Q-Learning: Have a neural network approximate the Q-function. As input, a representation of $(s,a)$, as output, a Q-Value.
 
+## References
 
+1. Watkins & Dayan, 1992 - [Almost sure convergence of Q-Learning](https://link.springer.com/article/10.1007/BF00992698)
 
 ---
 Now, we want to choose actions that put the agent in a state where the expected (discounted) reward is the highest possible. The State-Value function gives you the expected discounted reward when the agent is in a specific state. It gives an appreciation of the state the agent is in. Q-Learning aims at choosing states that maximize this value. But to choose a state, we need to perform an action. In math language, if we're in $s_t$ and $s_{t+1}$ gives a good expected (discounted) reward, we need to choose the appropriate $a_t$ that gets the agent to $s_{t+1}$. We can't aim at a certain $s_{t+1}$, because we don't have access to it even when choosing action $a_t$ (model-free assumption). This is where the Q-function comes into place, which uses only $s_t$ and $a_t$, and directly links to the State-value function (which is our target of maximization). Intuitively, the Q-function gives measure of the quality of an action. We'll see that from $s_t$, choosing the action that gives the highest value in the Q-function, in math terms choosing $\arg\max_a Q(s_t, a)$ results in choosing $s_{t+1}$ that gives the highest $V(s_{t+1})$ for $t+1$.
