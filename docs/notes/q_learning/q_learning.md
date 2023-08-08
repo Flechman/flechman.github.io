@@ -132,7 +132,7 @@ Q-Learning is an algorithm that repeatedly adjusts $\tilde{Q}$ to minimize the B
 $$\tilde{Q}(s_t,a_t) \leftarrow \tilde{Q}(s_t,a_t) - \alpha_t B(s_t,a_t,s_{t+1})$$
 Where $\alpha_t$ is a learning rate. In practice $\alpha_t$ will be close to 0 and stricly less than 1 to take into account previous updates.  
 
-Now we state the theoretical constraints under which Q-Learning converges, which helps motivate implementation choices of Q-Learning in practice. The proof of convergence is not given here, but the paper for the proof can be found in the [Reference 1](#references). 
+Now we state the theoretical constraints under which Q-Learning converges, which helps motivate implementation choices of Q-Learning in practice. The proof of convergence is not given here, but the paper for the proof can be found in [Reference 1](#references). 
 
 <ins>Convergence of Q-Learning: </ins> Let $t^{i}(s,a)$ be the timestep of the $i^{\text{th}}$ time that we're in state $s$ and we take action $a$.
 $\tilde{Q}$ converges almost surely towards $Q^*$ as long as
@@ -140,21 +140,24 @@ $$\sum_{i=0}^{\infty}{\alpha_{t^{i}(s,a)}}=\infty \quad\text{and}\quad \sum_{i=0
 
 The convergence is almost surely because we have random variables $s_t,s_{t+1}$ and $a_t$.  
 This statement reveals 2 constraints:
-1. The learning rates for each state-action pair $(s,a)$ must converge towards 0, but not too quickly.
+1. The learning rate for each state-action pair $(s,a)$ must converge towards 0, but not too quickly.
 2. Because $\alpha_t$ is bounded for all $t$, all state-action pair $(s,a)$ must be visited infinitely often.  
 
-So in an ideal world, the space $\mathcal{S}\times\mathcal{A}$ is small enough such that we can rapidly visit every state-action pair (following whatever the policy we choose). To get a good approximation, we can repeat the process to visit multiple times the 
-In traditional machine learning, we need to concentrate on exploring the most state-action pairs we can, and then repeat the learning process on them. But in reinforcement learning, you have to alternate between giving your best behavior until now and behaving to favor the exploration of new state-action pairs.
+## Exploration-Exploitation tradeoff
 
-Currently, the agent chooses an action to satisfy the equation $V^*(s) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$, so it always chooses $\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$. Formally, the policy the agent follows is
+Now the idea could be to apply Machine Learning to learn it: we sample a lot of events to adjust and learn each $\tilde{Q}$ so that it is as close as possible to $Q^*$. To do this we don’t need a specific policy, we just need enough exploration and (by the convergence constraints) enough iterations to make the values of $\tilde{Q}$ converge towards $Q^*$.  
+
+But we do Reinforcement Learning, so we also need our agent to get better over time and experiences. Thus our agent needs to take actions that it thinks are the best for now. So the agent chooses the actions that maximize $V^*$ for each state, and from the Bellman optimality equation, it chooses $\max_{a} Q^*$.
+
+To give its best guess, the agent always chooses $\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$, so it follows the following policy:
 $$\pi(a\mid s) = \begin{cases}
       1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
       0, & \text{otherwise}
     \end{cases}$$
-By identifying the Bellman optimality equation with the Bellman equation in Appendix, we can conclude that this is in fact an optimal policy.
+By identifying the Bellman optimality equation with the Bellman equation in Appendix, we can conclude that this is in fact an optimal policy.  
 
-Note that Q-Learning only learns about the states and actions it visits. When our agent chooses actions, it might never go into certain states, and thus it misses some information that would help get closer to $Q^*$. This is the exploration-exploitation tradeoff: the agent should sometimes choose suboptimal actions in order to visit new states and actions.  
-This tradeoff is handled by changing the greedy policy into an $\epsilon$-greedy policy. The idea is that with probability $1-\epsilon$ we apply our greedy policy, and with probability $\epsilon$ we choose an action uniformly at random. Formally, this gives the following policy:
+But this policy doesn't favor exploration, because it always follows the optimal path. Due to this, our agent might never go into certain states (i.e. sample certain state-action pairs), and thus it misses some information that would help get closer to $Q^*$. This is the exploration-exploitation tradeoff: the agent should sometimes choose suboptimal actions in order to visit new states and actions.  
+This tradeoff is handled by changing the above optimal (greedy) policy into an $\epsilon$-greedy policy. The idea is that with probability $1-\epsilon$ we apply our optimal policy, and with probability $\epsilon$ we choose an action uniformly at random. Formally, this gives the following policy:
 $$
 \pi(a\mid s) = \begin{cases}
       (1-\epsilon) + \epsilon\frac{1}{\mid \mathcal{A}(s)\mid}, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
@@ -162,6 +165,8 @@ $$
     \end{cases}
 $$
 Typically, $\epsilon$ changes as we go through training. It starts with a value close to 1 to favor exploration at the beginning, and decreases to be close to 0 as $\tilde{Q}$ converges to $Q^*$.
+
+Now, with this policy, the agent chooses most of the time the optimal action, while still learning accurately $Q^*$.
 
 Tabluar Q-Learning: We store the Q-function in a table and do a lookup when accessing the Q-Values. There is 1 Q-Value to learn per $(s,a)$ tuple, so the number of Q-Values to learn can go up to $\mathcal{S}\times\mathcal{A}$. In practice, $\lvert \mathcal{S} \rvert$ is exponentially big, so having to store all the Q-values in a table is impractical. It would be better to have a limited-size parameterized function that approximates the Q-function.  
 Deep Q-Learning: Have a neural network approximate the Q-function. As input, a representation of $(s,a)$, as output, a Q-Value.
