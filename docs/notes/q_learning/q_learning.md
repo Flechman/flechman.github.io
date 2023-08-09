@@ -6,7 +6,7 @@ Q-Learning
 
 ## Introduction
 
-The goal of Q-Learning is to learn a certain measure of quality of actions given states. 
+The goal of Q-Learning is to learn a certain measure of quality of actions given states. This measure of quality represents the long-term expected reward we can get by taking a certain action at a specific state. The higher the expected reward, the better the quality of the action.
 
 ## Framework
 
@@ -134,8 +134,7 @@ Where $\alpha_t$ is a learning rate. In practice $\alpha_t$ will be close to 0 a
 
 Now we state the theoretical constraints under which Q-Learning converges, which helps motivate implementation choices of Q-Learning in practice. The proof of convergence is not given here, but the paper for the proof can be found in [Reference 1](#references). 
 
-<ins>Convergence of Q-Learning: </ins> Let $t^{i}(s,a)$ be the timestep of the $i^{\text{th}}$ time that we're in state $s$ and we take action $a$.
-$\tilde{Q}$ converges almost surely towards $Q^*$ as long as
+<ins>Convergence of Q-Learning: </ins> Let $t^{i}(s,a)$ be the timestep of the $i^{\text{th}}$ time that we're in state $s$ and we take action $a$. Let the updates to $\tilde{Q}$ be done as mentioned above. Then, $\tilde{Q}$ converges almost surely towards $Q^*$ as long as
 $$\sum_{i=0}^{\infty}{\alpha_{t^{i}(s,a)}}=\infty \quad\text{and}\quad \sum_{i=0}^{\infty}{\left[\alpha_{t^{i}(s,a)}\right]^2}<\infty\quad\forall s\in\mathcal{S},a\in\mathcal{A}$$
 
 The convergence is almost surely because we have random variables $s_t,s_{t+1}$ and $a_t$.  
@@ -168,8 +167,26 @@ Typically, $\epsilon$ changes as we go through training. It starts with a value 
 
 Now, with this policy, the agent chooses most of the time the optimal action, while still learning accurately $Q^*$.
 
+We give an implementation of the algorithm:
+* **Algorithm parameters:** discount factor $\gamma\in]0,1[$, step size (function) $\alpha(t)\in]0,1]$
+* **Initialize:** $\tilde{Q}(s,a)$, $\forall (s,a)\in\mathcal{S}\times\mathcal{A}$, arbitrarily. $t\leftarrow 0$.
+* **Repeat for each episode:**
+    * Initialize state $s_t$
+    * **For each step of the episode:**
+        * Choose $a_t$ from $s_t$ using the $\epsilon$-greedy policy
+        * Take action $a_t$, observe reward $R(s_t, a_t)$ and next state $s'$
+        * $\tilde{Q}(s_t, a_t)\leftarrow \tilde{Q}(s_t, a_t) - \alpha_t B(s_t,a_t,s')$
+        * $t\leftarrow t+1$
+        * $s_t\leftarrow s'$
+    * **Until:** $s_t$ ends the episode
+
+To improve the learning of $Q^*$, we can memorize each $(s_t, a_t, s')$ inside a set $E$, and at the end of each episode, we can sample tuples uniformly at random from $E$ and apply the learning process to them. But this has the disadvantage of being slower and more costly.
+
+## Deep-Q-Learning
+
 Tabluar Q-Learning: We store the Q-function in a table and do a lookup when accessing the Q-Values. There is 1 Q-Value to learn per $(s,a)$ tuple, so the number of Q-Values to learn can go up to $\mathcal{S}\times\mathcal{A}$. In practice, $\lvert \mathcal{S} \rvert$ is exponentially big, so having to store all the Q-values in a table is impractical. It would be better to have a limited-size parameterized function that approximates the Q-function.  
 Deep Q-Learning: Have a neural network approximate the Q-function. As input, a representation of $(s,a)$, as output, a Q-Value.
+
 
 ## References
 
