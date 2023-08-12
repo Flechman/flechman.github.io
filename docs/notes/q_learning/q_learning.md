@@ -146,14 +146,14 @@ This statement reveals 2 constraints:
 
 Now the idea could be to apply Machine Learning to learn it: we sample a lot of events to adjust and learn each $\tilde{Q}$ so that it is as close as possible to $Q^*$. To do this we don’t need a specific policy, we just need enough exploration and (by the convergence constraints) enough iterations to make the values of $\tilde{Q}$ converge towards $Q^*$.  
 
-But we do Reinforcement Learning, so we also need our agent to get better over time and experiences. Thus our agent needs to take actions that it thinks are the best for now. So the agent chooses the actions that maximize $V^*$ for each state, and from the Bellman optimality equation, it chooses $\max_{a} Q^*$.
+But we do Reinforcement Learning, so we also need our agent to get better over experiences. Thus our agent needs to take actions that it thinks are the best according to what it's learned until now. So the agent chooses the actions that maximize $V^*$ for each state, and from the Bellman optimality equation, it chooses $\max_{a} Q^*$.
 
 To give its best guess, the agent always chooses $\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$, so it follows the following policy:
 $$\pi(a\mid s) = \begin{cases}
       1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
       0, & \text{otherwise}
     \end{cases}$$
-By identifying the Bellman optimality equation with the Bellman equation in Appendix, we can conclude that this is in fact an optimal policy.  
+By identifying the Bellman optimality equation with the Bellman equation in [Appendix](#appendix), we can conclude that this is in fact an optimal policy.  
 
 But this policy doesn't favor exploration, because it always follows the optimal path. Due to this, our agent might never go into certain states (i.e. sample certain state-action pairs), and thus it misses some information that would help get closer to $Q^*$. This is the exploration-exploitation tradeoff: the agent should sometimes choose suboptimal actions in order to visit new states and actions.  
 This tradeoff is handled by changing the above optimal (greedy) policy into an $\epsilon$-greedy policy. The idea is that with probability $1-\epsilon$ we apply our optimal policy, and with probability $\epsilon$ we choose an action uniformly at random. Formally, this gives the following policy:
@@ -168,7 +168,7 @@ Typically, $\epsilon$ changes as we go through training. It starts with a value 
 Now, with this policy, the agent chooses most of the time the optimal action, while still learning accurately $Q^*$.
 
 We give an implementation of the algorithm:
-* **Algorithm parameters:** discount factor $\gamma\in]0,1[$, step size (function) $\alpha(t)\in]0,1]$
+* **Parameters:** discount factor $\gamma\in]0,1[$, step size (function) $\alpha(t)\in]0,1]$
 * **Initialize:** $\tilde{Q}(s,a)$, $\forall (s,a)\in\mathcal{S}\times\mathcal{A}$, arbitrarily. $t\leftarrow 0$.
 * **Repeat for each episode:**
     * Initialize state $s_t$
@@ -180,23 +180,52 @@ We give an implementation of the algorithm:
         * $s_t\leftarrow s'$
     * **Until:** $s_t$ ends the episode
 
-To improve the learning of $Q^*$, we can memorize each $(s_t, a_t, s')$ inside a set $E$, and at the end of each episode, we can sample tuples uniformly at random from $E$ and apply the learning process to them. But this has the disadvantage of being slower and more costly.
+Replay Memory trick: To improve the learning of $Q^*$, we can memorize each $(s_t, a_t, s')$ inside a set $E$, and at the end of each episode, we can sample tuples uniformly at random from $E$ and apply the learning process to them. But this has the disadvantage of being slower and more costly.
 
 ## Deep-Q-Learning
 
-Tabluar Q-Learning: We store the Q-function in a table and do a lookup when accessing the Q-Values. There is 1 Q-Value to learn per $(s,a)$ tuple, so the number of Q-Values to learn can go up to $\mathcal{S}\times\mathcal{A}$. In practice, $\lvert \mathcal{S} \rvert$ is exponentially big, so having to store all the Q-values in a table is impractical. It would be better to have a limited-size parameterized function that approximates the Q-function.  
-Deep Q-Learning: Have a neural network approximate the Q-function. As input, a representation of $(s,a)$, as output, a Q-Value.
+So far, we've been assuming a tabular representation of the Q-function. There is 1 Q-Value to learn per $(s,a)$ tuple, so the number of Q-Values (size of the table) can go up to $\mathcal{S}\times\mathcal{A}$.  
+In practice, $\lvert \mathcal{S} \rvert$ is very big, so having to store all the Q-values in a table is impractical.  
+Since for any limited-size set $\mathcal{S}$ we can uniquely represent any $s\in\mathcal{S}$ using $log_2(\lvert \mathcal{S} \rvert)$ bits, it would be better to have a limited-size parameterized function that approximates the Q-function.  
 
+This is what deep Q-Learning is about: have an artificial neural network approximate the Q-function. The network would get a representation of $(s,a)$ as input (achievable using $log_2(\lvert \mathcal{S} \rvert)+log_2(\lvert \mathcal{A} \rvert)$ bits), and it would output an approximate value of $Q(s,a)$.  
+
+Our deep Q-Learning network (Q-network) is noted as $Q_{\theta}$ with parameters to learn $\theta$. The loss we use is the bellman error squared:
+$$y_{t,\theta} = R(s_t,a_t) + \gamma\max_{a\in\mathcal{A}(s_{t+1})}Q_{\theta}(s_{t+1},a)$$
+$$L(s_t,a_t,s_{t+1}) = \left(Q_{\theta}(s_t,a_t) - y_{t,\theta}\right)^2$$
+$y_{t,\theta}$ is the target Q-value and $\theta$ is fixed.
+
+Now, updating Q is done using backpropagation:
+$$\theta \leftarrow \theta -\alpha_t\frac{\partial L}{\partial\theta}$$
+Where $\frac{\partial L}{\partial\theta} = 2(Q_{\theta}(s_t,a_t) - y_{t,\theta})\frac{\partial Q_{\theta}}{\partial \theta}$.
+
+Notice that, in the loss, we are using the same parameters $\theta$ for the target Q-value and for the predicted Q-value. This gives significant correlation between the target Q-value and $\theta$ that we are learning. So at each training (updating) step, both our predicted Q-value and the target Q-value will shift. We're getting closer to the target, but the target is also moving. This leads to oscillation in training.  
+To mitigate this, we can update the target's $\theta$ every $T$ training steps.
+
+Here is an implementation of the algorithm using Q-network $Q_{\theta}$:
+* **Parameters:** discount factor $\gamma\in]0,1[$, step size (function) $\alpha(t)\in]0,1]$, $T\in\mathbb{N}^*$
+* **Initialize:** $\theta$ using favorite initialization technique. $\theta_T \leftarrow \theta$. $t\leftarrow 0$. $i\leftarrow 0$.
+* **Repeat for each episode:**
+    * Initialize state $s_t$
+    * **For each step of the episode:**
+        * Choose $a_t$ from $s_t$ using the $\epsilon$-greedy policy
+        * Take action $a_t$, observe reward $R(s_t, a_t)$ and next state $s'$
+        * $y_{t,\theta_T} \leftarrow R(s_t,a_t) + \gamma\max_{a\in\mathcal{A}(s')}Q_{\theta_T}(s',a)$
+        * $\theta \leftarrow \theta -2\alpha_t(Q_{\theta}(s_t,a_t) - y_{t,\theta_T})\frac{\partial Q_{\theta}}{\partial \theta}$
+        * $t\leftarrow t+1$
+        * $s_t\leftarrow s'$
+        * $i\leftarrow i+1$
+        * if $i=T$, $\theta_T \leftarrow \theta$ and $i\leftarrow 0$
+    * **Until:** $s_t$ ends the episode
 
 ## References
 
 1. Watkins & Dayan, 1992 - [Almost sure convergence of Q-Learning](https://link.springer.com/article/10.1007/BF00992698)
 
----
-Now, we want to choose actions that put the agent in a state where the expected (discounted) reward is the highest possible. The State-Value function gives you the expected discounted reward when the agent is in a specific state. It gives an appreciation of the state the agent is in. Q-Learning aims at choosing states that maximize this value. But to choose a state, we need to perform an action. In math language, if we're in $s_t$ and $s_{t+1}$ gives a good expected (discounted) reward, we need to choose the appropriate $a_t$ that gets the agent to $s_{t+1}$. We can't aim at a certain $s_{t+1}$, because we don't have access to it even when choosing action $a_t$ (model-free assumption). This is where the Q-function comes into place, which uses only $s_t$ and $a_t$, and directly links to the State-value function (which is our target of maximization). Intuitively, the Q-function gives measure of the quality of an action. We'll see that from $s_t$, choosing the action that gives the highest value in the Q-function, in math terms choosing $\arg\max_a Q(s_t, a)$ results in choosing $s_{t+1}$ that gives the highest $V(s_{t+1})$ for $t+1$.
+## Appendix
 
 ---
-We can also derive the Bellman equation of the Q-Function:
+Bellman equation of the Q-Function:
 $$\begin{alignat*}{6}
 Q^{\pi}(s,a) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s,a_t=a\right]\\
 &= \sum_{s'\in\mathcal{S}}{p(s_{t+1}=s'\mid s_t=s,a_t=a)\mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s,a_t=a,s_{t+1}=s'\right]}\\
@@ -205,14 +234,13 @@ Q^{\pi}(s,a) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mi
 &= R(s_t,a_t) + \gamma\sum_{s'\in\mathcal{S}}{p(s_{t+1}=s'\mid s_t=s,a_t=a)\sum_{a'\in\mathcal{A(s_{t+1})}}{\pi(a_{t+1}=a'\mid s_{t+1}=s')\mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+1+i}} \mid s_{t+1}=s',a_{t+1}=a'\right]}}\\
 &= R(s_t,a_t) + \gamma\sum_{s'\in\mathcal{S}}{p(s_{t+1}=s'\mid s_t=s,a_t=a)\sum_{a'\in\mathcal{A(s_{t+1})}}{\pi(a_{t+1}=a'\mid s_{t+1}=s')Q^{\pi}(s',a')}}
 \end{alignat*}$$
-
+Simplifying the notation:
 $$\Rightarrow \quad Q^{\pi}(s,a)= R(s,a)+\gamma\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\sum_{a'\in\mathcal{A}(s')}{\pi(a'|s')Q^{\pi}(s',a')}}$$
 
-
 ---
-Let's first rewrite the V-function in a recusive manner, which is called the Bellman equation of the State-Value Function: 
+Bellman equation of the V-Function: 
 $$\begin{alignat*}{7}
-    V^{\pi}(s) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}}\mid s_t=s\right] \quad\quad \text{Note that $r_{t+i}$ is a random variable.}\\
+    V^{\pi}(s) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}}\mid s_t=s\right]\\
     &= \mathbb{E}_{\pi}\left[r_t + \gamma\sum_{i=1}^{\infty}{\gamma^{i-1}r_{t+i}}\mid s_t=s\right]\\
     &= \mathbb{E}_{\pi}\left[r_t + \gamma\sum_{i=0}^{\infty}{\gamma^{i}r_{t+1+i}}\mid s_t=s\right]\\
     &= \sum_{a\in\mathcal{A(s_t)}}{\pi(a_t=a\mid s_t=s)\mathbb{E}_{\pi}\left[r_t + \gamma\sum_{i=0}^{\infty}{\gamma^{i}r_{t+1+i}} \mid s_t=s, a_t=a\right]}\\
@@ -220,13 +248,5 @@ $$\begin{alignat*}{7}
     &= \sum_{a\in\mathcal{A(s_t)}}{\pi(a_t=a\mid s_t=s)\sum_{s'\in\mathcal{S}}{p(s_{t+1}=s'\mid s_t=s,a_t=a)\left(R(s_t,a_t)+\gamma\mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+1+i}} \mid s_t=s, a_t=a, s_{t+1}=s'\right]\right)}}\\
     &= \sum_{a\in\mathcal{A(s_t)}}{\pi(a_t=a\mid s_t=s)\sum_{s'\in\mathcal{S}}{p(s_{t+1}=s'\mid s_t=s,a_t=a)\left(R(s_t,a_t)+\gamma V^{\pi}(s')\right)}}\\
 \end{alignat*}$$
-So we obtain the following (simplifying the notation)
+Simplifying the notation:
 $$\Rightarrow \quad V^{\pi}(s)=\sum_{a\in\mathcal{A(s)}}{\pi(a\mid s)\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\left(R(s,a)+\gamma V^{\pi}(s')\right)}}$$
-
----
-$$\pi(a\mid s) = \begin{cases}
-      1, & \text{if}\ a=\arg\max_{a'\in\mathcal{A}(s)}Q^*(s,a') \\
-      0, & \text{otherwise}
-    \end{cases}$$
-
-An optimal policy will favor the action that gives the highest Q-value so it will converge to probabilities in {0, 1}, unless some actions have equal highest Q-Values, in which case the probabilities for these actions will be equal and between 0 and 1 (and choosing either of them is optimal) while the other actions with lower Q-values will have probability 0.

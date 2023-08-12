@@ -7,3 +7,4 @@
 ### Other
 * [Interior Point Methods](IPM/ipm.md)
 * [IPM Part 2: The Lee-Sidford Barrier](IPM_lee_sidford/ipm_lee_sidford.md)
+* [Reinforcement Learning: Q-Learning \& Deep Q-Learning](q_learning/q_learning.md)

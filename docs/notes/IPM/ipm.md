@@ -208,6 +208,7 @@ This is the topic of another note, which concentrates on the Lee-Sidford barrier
 2. Lecture notes from the famous Yin Tat Lee: [CSE 599: Interplay between Convex Optimization and Geometry](https://yintat.com/teaching/cse599-winter18/)
 
 ## Appendix
+<hr>
 
 ### Proof Lemma 1.
 
@@ -315,4 +316,3 @@ $$
 c^{\top}x_t - c^{\top}\tilde{x} = c^{\top}(x_t -\tilde{x}) = t\nabla\phi(x_t)^{\top}(\tilde{x} - x_t) \leq t\nu
 $$
 which completes the proof.
-<hr>
