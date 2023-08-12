@@ -1,1 +1,0 @@
-const e={key:"v-8daa1a0e",path:"/",title:"",lang:"en-US",frontmatter:{home:!0,heroText:"Hey, I'm R\xE9mi :)",tagline:"This site hosts all my notes, from lecture notes to personal project notes"},excerpt:"",headers:[],git:{updatedTime:1691585985e3},filePathRelative:"index.md"};export{e as data};
