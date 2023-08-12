@@ -208,7 +208,6 @@ This is the topic of another note, which concentrates on the Lee-Sidford barrier
 2. Lecture notes from the famous Yin Tat Lee: [CSE 599: Interplay between Convex Optimization and Geometry](https://yintat.com/teaching/cse599-winter18/)
 
 ## Appendix
-<hr>
 
 ### Proof Lemma 1.
 

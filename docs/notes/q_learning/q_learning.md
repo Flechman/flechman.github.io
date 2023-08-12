@@ -224,7 +224,6 @@ Here is an implementation of the algorithm using Q-network $Q_{\theta}$:
 
 ## Appendix
 
----
 Bellman equation of the Q-Function:
 $$\begin{alignat*}{6}
 Q^{\pi}(s,a) &= \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s,a_t=a\right]\\
