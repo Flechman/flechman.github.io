@@ -10,19 +10,29 @@ The goal of Q-Learning is to learn a certain measure of quality of actions given
 
 ## Framework
 
-- We have an agent and an environment which interact with each-other in discrete time steps. At time $t$, the agent observes the environment's state $s_t \in \mathcal{S}$, and performs action $a_t \in \mathcal{A}(s_t)$. The agent gets a reward $r_t\in \mathbb{R}$ from performing this action, and the environement changes to state $s_{t+1} \in \mathcal{S}$.
-- The state transition follows a distribution $p(s_{t+1}\mid s_t, a_t)$ $\;\forall s_{t+1}\in \mathcal{S}$, and we assume to have the markov property $p(s_{t+1}\mid s_0, a_0, ..., s_t, a_t) = p(s_{t+1}\mid s_t, a_t)$.
-- We assume that we don't know the environment's dynamics (model free), so we don't know the state transition $p(s_{t+1}\mid s_t, a_t)$ $\;\forall s_{t+1}\in \mathcal{S}$. In other words, from $s_t, a_t$ we cannot infer anything on $s_{t+1}$.  
-- We note $\mathcal{S}$ the observable state space, $\mathcal{A}$ the action space. $\mathcal{A}(s)$ is the action space when the state of the environment is $s$, and $\mathcal{A}(s) \subseteq \mathcal{A}$. 
-- $R: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ is the reward function, and $r_t = R(s_t, a_t)$. The notation $r_t$ will be used to denote a random variable that depends on the event $(s_t, a_t)$, and $R(s_t, a_t)$ will be used when we know its value (i.e. when we know $s_t$ and $a_t$).
-- We define a policy $\pi$ to be a strategy for the agent. We model it as a function $\pi: \mathcal{A}\times\mathcal{S} \rightarrow [0,1]$ such that for every $s\in\mathcal{S}$, $\sum_{a\in\mathcal{A}(s)} = 1$, so that it defines, for every choice of $s\in\mathcal{S}$ a probability distribution over $\mathcal{A}(s)$, and we denote it with $\pi(a\mid s)$. 
-- The notation $\mathbb{E}_{\pi}[...]$ means that we sample all actions according to $\pi$, and all states are sampled according to state transition.
+We have an agent and an environment which interact with each-other in discrete time steps. At time $t$, the agent observes the environment's state $s_t \in \mathcal{S}$, and performs action $a_t \in \mathcal{A}(s_t)$. The agent gets a reward $r_t\in \mathbb{R}$ from performing this action, and the environement changes to state $s_{t+1} \in \mathcal{S}$.  
+
+The state transition follows a distribution $p(s_{t+1}\mid s_t, a_t)$ $\;\forall s_{t+1}\in \mathcal{S}$, and we assume to have the markov property $p(s_{t+1}\mid s_0, a_0, ..., s_t, a_t) = p(s_{t+1}\mid s_t, a_t)$.  
+
+We assume that we don't know the environment's dynamics (model free), so we don't know the state transition $p(s_{t+1}\mid s_t, a_t)$ $\;\forall s_{t+1}\in \mathcal{S}$. In other words, from $s_t, a_t$ we cannot infer anything on $s_{t+1}$.  
+
+We note $\mathcal{S}$ the observable state space, $\mathcal{A}$ the action space. $\mathcal{A}(s)$ is the action space when the state of the environment is $s$, and $\mathcal{A}(s) \subseteq \mathcal{A}$.  
+
+$R: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ is the reward function, and $r_t = R(s_t, a_t)$. The notation $r_t$ will be used to denote a random variable that depends on the event $(s_t, a_t)$, and $R(s_t, a_t)$ will be used when we know its value (i.e. when we know $s_t$ and $a_t$).  
+
+We define a policy $\pi$ to be a strategy for the agent. We model it as a function $\pi: \mathcal{A}\times\mathcal{S} \rightarrow [0,1]$ such that for every $s\in\mathcal{S}$, $\sum_{a\in\mathcal{A}(s)} = 1$, so that it defines, for every choice of $s\in\mathcal{S}$ a probability distribution over $\mathcal{A}(s)$, and we denote it with $\pi(a\mid s)$.  
+
+The notation $\mathbb{E}_{\pi}[...]$ means that we sample all actions according to $\pi$, and all states are sampled according to state transition.
+
+## Defining The Goal
 
 Let's start with what we want to achieve. From a state $s$, we want to maximize the expected cumulative reward of our course of action. The expected cumulative reward is what we should obtain on average if we start at a state $s$ and follow our policy to perform actions. The expected cumulative reward is defined as $\mathbb{E}\left[\sum_{i=0}^{\infty}{r_{t+i}} \mid s_t=s\right]$ so our goal is:
 $$\max_{\pi}\mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{r_{t+i}} \mid s_t=s\right]$$
 
 But summing infinitely many rewards can be infinite. So we slightly change our goal to circumvent this. We prioritize the impact of the most recent rewards over the ones that come later, by introducting a discount factor $\gamma\in ]0, 1[$. We thus define the discounted cumulative reward as being $G_t = r_t + \gamma r_{t+1} + \gamma^2 r_{r+2} + ... = \sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}}$.
 The closer $\gamma$ is to 1, the more importance we give to long-term rewards, whereas when $\gamma$ is close to 0, we prioritize short-term rewards. This can be important if for example we are in a game where there are multiple short-term goals that don't end the game but a single long-term goal that ends the game.  
+
+### The V-Function
 
 We can now define the expected discounted cumulative reward when we start at state $s$ and follow policy $\pi$, otherwise known as the State-Value Function (V-function):
  $$V^{\pi}(s) = \mathbb{E}_{\pi}[G_t \mid s_t = s] = \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s\right]$$   
@@ -35,10 +45,15 @@ $$\arg \max_{a_t\in\mathcal{A}(s_t)} R(s_t, a_t) + \gamma\mathbb{E}_{p(s_{t+1}\m
 
 The fact that we need to get the next state distribution (i.e. information on the state transition) goes in conflict with our model-free assumption, so the V-function cannot directly be used as a means to choose an action based on the state $s_t$ we're in.  
 
+## The Q-Function
+
+### Definition
 
 Let's introduce a new function, called the Action-Value Function (or Q-function), which is similar to the State-Value Function but takes into account the action that has been chosen. 
 $$Q^{\pi}(s,a) = \mathbb{E}_{\pi}[G_t \mid s_t = s, a_t=a] = \mathbb{E}_{\pi}\left[\sum_{i=0}^{\infty}{\gamma^{i}r_{t+i}} \mid s_t = s,a_t=a\right]$$
 The intuition of this function is that it gives a measure of the quality of the action we take at a certain state.
+
+### Link To Our Goal
 
 Let's link the Q-function to the V-function.
 
@@ -59,20 +74,26 @@ V^{\pi}(s) &= \mathbb{E}_{\pi}[G_t \mid s_t = s]\\
 \end{alignat*}$$
 
 $$\Rightarrow \quad V^{\pi}(s) = \sum_{a\in \mathcal{A}(s)}{\pi(a\mid s)}Q^{\pi}(s,a)\tag{$**$}$$
-The above equation is important. It describes the relationship between two fundamental value functions in Reinforcement Learning. It is valid for any policy. Let's see if we can simplify it when we use the optimal policy $\pi^{*}$.
+The above equation is important. It describes the relationship between two fundamental value functions in Reinforcement Learning. It is valid for any policy. 
 
-Let's define what an optimal policy is by first defining a partial ordering between policies:  
+### Policy Ordering
+
+Let's define what an optimal policy $\pi^*$ is by first defining a partial ordering between policies:  
 Let $\pi_1$, $\pi_2$ be two policies. Then,
 $$\pi_1 \geq \pi_2 \quad\Leftrightarrow \quad\forall s\in\mathcal{S}\;\;V^{\pi_1}(s) \geq V^{\pi_2}(s)$$
 Some policies might not be comparable, for example if there exists $s_1, s_2$ in $\mathcal{S}$ such that $V^{\pi_1}(s_1) > V^{\pi_2}(s_1)$ but $V^{\pi_1}(s_2) < V^{\pi_2}(s_2)$.  
 An optimal policy $\pi^*$ is one that is comparable with any other policy $\pi$, and such that $\pi^* \geq \pi$.
 
-A result that we won't prove here but that we'll be using is that in our setting $\pi^*$ always exists, moreover there alway exists a deterministic policy that is optimal. Also note that there can be multiple optimal policies that give the same optimal value, i.e. $\pi^*$ may not be unique.  
+A result that we won't prove here but that we'll be using is that, in our setting, $\pi^*$ always exists, and moreover there alway exists a deterministic policy that is optimal. Also note that there can be multiple optimal policies that give the same optimal value, i.e. $\pi^*$ may not be unique.  
 
-We can rewrite our ultimate goal (1) as being $V^*(s) = V^{\pi^*}(s) = \max_{\pi}V^{\pi}(s)$. It is the optimal State-Value Function.  
-Similarly, the optimal Action-Value Function is $Q^*(s,a) = Q^{\pi^*}(s,a) = \max_{\pi}Q^{\pi}(s,a)$.  
+We can rewrite our ultimate goal (1) as being $V^*(s) = V^{\pi^*}(s) = \max_{\pi}V^{\pi}(s)$. It is the optimal V-function.  
+Similarly, the optimal Q-function is $Q^*(s,a) = Q^{\pi^*}(s,a) = \max_{\pi}Q^{\pi}(s,a)$.  
+
+## Finding The Optimal V-Function Is Equivalent To Finding The Optimal Q-Function
 
 We will now derive an important result, which says that to obtain the values of the optimal V-function, we can concentrate on getting the values of the optimal Q-function. To help derive this important result, we first give the following lemma.
+
+### Policy Improvement Lemma
 
 Lemma (policy improvement): If $\exists \bar{s}\in\mathcal{S}$ such that $V^{\pi}(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}(\bar{s},a)}$, then 
 $$\exists \pi' \;s.t.\quad V^{\pi}(s) = V^{\pi'}(s) \;\;\forall s\in\mathcal{S}\setminus\{\bar{s}\} \quad\text{and}\quad V^{\pi}(\bar{s})<V^{\pi'}(\bar{s})$$
@@ -106,7 +127,9 @@ $$\begin{alignat*}{7}
 So finally
 $$V^{\pi}(\bar{s}) < V^{\pi'}(\bar{s})$$
 
-Now we are ready to state our important result:
+Now we are ready to state our important result.
+
+### Equivalence Theorem
 
 $$\forall s\in\mathcal{S}, \quad V^*(s) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
 
@@ -122,6 +145,8 @@ Bellman optimality equation for $Q^*$:
 $$Q^*(s,a) = R(s,a) +\gamma\sum_{s'\in\mathcal{S}}{p(s'\mid s,a)\max_{a'\in\mathcal{A}(s')}}Q^*(s',a')$$
 This is obtained by noting that $(*)$ works in particular with $\pi^*$, and by combining it with $V^*(s)=\max_{a\in\mathcal{A}(s)}Q^*(s,a)$.  
 
+## Q-Learning
+
 Let $\tilde{Q}$ be the function obtained from learning $Q^*$.  
 The Bellman optimality equation will help us learn $Q^*(s,a)$ for all $s\in\mathcal{S}, a\in\mathcal{A}(s)$ because our learning objective is minimizing the following error measure:
 
@@ -132,7 +157,9 @@ Q-Learning is an algorithm that repeatedly adjusts $\tilde{Q}$ to minimize the B
 $$\tilde{Q}(s_t,a_t) \leftarrow \tilde{Q}(s_t,a_t) - \alpha_t B(s_t,a_t,s_{t+1})$$
 Where $\alpha_t$ is a learning rate. In practice $\alpha_t$ will be close to 0 and stricly less than 1 to take into account previous updates.  
 
-Now we state the theoretical constraints under which Q-Learning converges, which helps motivate implementation choices of Q-Learning in practice. The proof of convergence is not given here, but the paper for the proof can be found in [Reference 1](#references). 
+Now we state the theoretical constraints under which Q-Learning converges, which helps motivate implementation choices of Q-Learning in practice. The proof of convergence is not given here, but the paper for the proof can be found in [Reference 2](#references). 
+
+### Constraints For Convergence
 
 <ins>Convergence of Q-Learning: </ins> Let $t^{i}(s,a)$ be the timestep of the $i^{\text{th}}$ time that we're in state $s$ and we take action $a$. Let the updates to $\tilde{Q}$ be done as mentioned above. Then, $\tilde{Q}$ converges almost surely towards $Q^*$ as long as
 $$\sum_{i=0}^{\infty}{\alpha_{t^{i}(s,a)}}=\infty \quad\text{and}\quad \sum_{i=0}^{\infty}{\left[\alpha_{t^{i}(s,a)}\right]^2}<\infty\quad\forall s\in\mathcal{S},a\in\mathcal{A}$$
@@ -142,7 +169,7 @@ This statement reveals 2 constraints:
 1. The learning rate for each state-action pair $(s,a)$ must converge towards 0, but not too quickly.
 2. Because $\alpha_t$ is bounded for all $t$, all state-action pair $(s,a)$ must be visited infinitely often.  
 
-## Exploration-Exploitation tradeoff
+### Exploration-Exploitation tradeoff
 
 Now the idea could be to apply Machine Learning to learn it: we sample a lot of events to adjust and learn each $\tilde{Q}$ so that it is as close as possible to $Q^*$. To do this we don’t need a specific policy, we just need enough exploration and (by the convergence constraints) enough iterations to make the values of $\tilde{Q}$ converge towards $Q^*$.  
 
@@ -166,6 +193,8 @@ $$
 Typically, $\epsilon$ changes as we go through training. It starts with a value close to 1 to favor exploration at the beginning, and decreases to be close to 0 as $\tilde{Q}$ converges to $Q^*$.
 
 Now, with this policy, the agent chooses most of the time the optimal action, while still learning accurately $Q^*$.
+
+### Implementation Pseudocode
 
 We give an implementation of the algorithm:
 * **Parameters:** discount factor $\gamma\in]0,1[$, step size (function) $\alpha(t)\in]0,1]$
@@ -202,6 +231,8 @@ Where $\frac{\partial L}{\partial\theta} = 2(Q_{\theta}(s_t,a_t) - y_{t,\theta})
 Notice that, in the loss, we are using the same parameters $\theta$ for the target Q-value and for the predicted Q-value. This gives significant correlation between the target Q-value and $\theta$ that we are learning. So at each training (updating) step, both our predicted Q-value and the target Q-value will shift. We're getting closer to the target, but the target is also moving. This leads to oscillation in training.  
 To mitigate this, we can update the target's $\theta$ every $T$ training steps.
 
+### Implementation Pseudocode
+
 Here is an implementation of the algorithm using Q-network $Q_{\theta}$:
 * **Parameters:** discount factor $\gamma\in]0,1[$, step size (function) $\alpha(t)\in]0,1]$, $T\in\mathbb{N}^*$
 * **Initialize:** $\theta$ using favorite initialization technique. $\theta_T \leftarrow \theta$. $t\leftarrow 0$. $i\leftarrow 0$.
@@ -220,7 +251,8 @@ Here is an implementation of the algorithm using Q-network $Q_{\theta}$:
 
 ## References
 
-1. Watkins & Dayan, 1992 - [Almost sure convergence of Q-Learning](https://link.springer.com/article/10.1007/BF00992698)
+1. The famous book by Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
+2. Watkins & Dayan, 1992 - [Almost sure convergence of Q-Learning](https://link.springer.com/article/10.1007/BF00992698)
 
 ## Appendix
 
