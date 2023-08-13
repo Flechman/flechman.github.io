@@ -95,18 +95,22 @@ We will now derive an important result, which says that to obtain the values of 
 
 ### Policy Improvement Lemma
 
-Lemma (policy improvement): If $\exists \bar{s}\in\mathcal{S}$ such that $V^{\pi}(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}(\bar{s},a)}$, then 
+**Lemma:** *If $\exists \bar{s}\in\mathcal{S}$ such that $V^{\pi}(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}(\bar{s},a)}$, then*
 $$\exists \pi' \;s.t.\quad V^{\pi}(s) = V^{\pi'}(s) \;\;\forall s\in\mathcal{S}\setminus\{\bar{s}\} \quad\text{and}\quad V^{\pi}(\bar{s})<V^{\pi'}(\bar{s})$$
 
-Proof:  
+*Proof.*  
 Let $\bar{a} = \arg\max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}(\bar{s},a)}$.  
 Let $\pi'(a\mid s) = \begin{cases}\pi(a\mid s), & \text{if}\ s\neq\bar{s} \\1, & \text{if}\ s=\bar{s} \text{ and } a=\bar{a} \\0, & \text{otherwise}\end{cases}$  
 
-* $\forall s\in\mathcal{S}\setminus\{\bar{s}\}: V^{\pi}(s)=V^{\pi'}(s)$ because $s\neq\bar{s}$ so $\pi'(a\mid s) = \pi(a\mid s)$.
-* If $s=\bar{s}$, $V^{\pi}(\bar{s}) = \sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} < \sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid\bar{s})Q^{\pi}(\bar{s},a)}$  
-because (lemma assumption) $$\sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} = Q^{\pi}(\bar{s},\bar{a}) = \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}}(\bar{s},a) > V^{\pi}(\bar{s})$$  
+First, $\forall s\in\mathcal{S}\setminus\{\bar{s}\}$ : 
+* $V^{\pi}(s)=V^{\pi'}(s)$ because $s\neq\bar{s}$ so $\pi'(a\mid s) = \pi(a\mid s)$.
+
+Then, when $s=\bar{s}$ :  
+$$V^{\pi}(\bar{s}) = \sum_{a\in\mathcal{A}(\bar{s})}{\pi(a\mid\bar{s})Q^{\pi}(\bar{s},a)} < \sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid\bar{s})Q^{\pi}(\bar{s},a)}$$  
+because (lemma assumption) 
+$$\sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid\bar{s})Q^{\pi}(\bar{s},a)} = Q^{\pi}(\bar{s},\bar{a}) = \max_{a\in\mathcal{A}(\bar{s})}{Q^{\pi}}(\bar{s},a) > V^{\pi}(\bar{s})$$  
 Without loss of generality, let $t$ be the current timestep.  
-In what follows, we use multiple times the links derived between the Q-function and the V-function.  
+In what follows, we use multiple times the [links derived between the Q-function and the V-function](#link-to-our-goal).  
 $$\begin{alignat*}{7}
     V^{\pi}(\bar{s}) &< \sum_{a\in\mathcal{A}(\bar{s})}{\pi'(a\mid \bar{s})Q^{\pi}(\bar{s},a)}\\
     &= \mathbb{E}_{\pi'}[Q^{\pi}(s_t,a_t) \mid s_t=\bar{s}]\\
@@ -114,8 +118,14 @@ $$\begin{alignat*}{7}
     &=\mathbb{E}_{\pi'}[r_t + \gamma V^{\pi}(s_{t+1}) \mid s_t=\bar{s}] \quad\text{following our notation}\\
     &\leq \mathbb{E}_{\pi'}[r_t + \gamma Q^{\pi}(s_{t+1}, a_{t+1}) \mid s_t=\bar{s}]\\
 \end{alignat*}$$  
-The last inequality is obtained with the fact that $V^{\pi}(s_{t+1}) = \mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]$, and if $s_{t+1}\neq \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]=\mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$, but if $s_{t+1} = \bar{s}$ then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]\leq \max_{a\in\mathcal{A(s_{t+1})}}{Q^{\pi}(s_{t+1}, a)} = \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Thus $V^{\pi}(s_{t+1}) \leq \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$. Then the expectation is redundant so we can remove it.  
-Repeating the above reasonning we obtain 
+The last inequality is due to the fact that $V^{\pi}(s_{t+1}) = \mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]$, and 
+* if $s_{t+1}\neq \bar{s}$, then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]=\mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$, 
+* but if $s_{t+1} = \bar{s}$, then $\mathbb{E}_{\pi}[Q^{\pi}(s_{t+1}, a_{t+1})]\leq \max_{a\in\mathcal{A(s_{t+1})}}{Q^{\pi}(s_{t+1}, a)} = \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$.  
+
+Thus $V^{\pi}(s_{t+1}) \leq \mathbb{E}_{\pi'}[Q^{\pi}(s_{t+1}, a_{t+1})]$.  
+Then the expectation is redundant so we can remove it.  
+
+Repeating the above reasonning, we obtain 
 $$\begin{alignat*}{7}
     \mathbb{E}_{\pi'}[r_t + \gamma V^{\pi}(s_{t+1}) \mid s_t=\bar{s}] &\leq \mathbb{E}_{\pi'}[r_t + \gamma Q^{\pi}(s_{t+1}, a_{t+1}) \mid s_t=\bar{s}]\\
     &= \mathbb{E}_{\pi'}[r_t + \gamma r_{t+1} + \gamma^2 V^{\pi}(s_{t+2}) \mid s_t=\bar{s}]\\
@@ -126,19 +136,28 @@ $$\begin{alignat*}{7}
 \end{alignat*}$$  
 So finally
 $$V^{\pi}(\bar{s}) < V^{\pi'}(\bar{s})$$
+$$\phantom{end of proof}\tag*{$\square$}$$
 
 Now we are ready to state our important result.
 
 ### Equivalence Theorem
 
+**Theorem:**
 $$\forall s\in\mathcal{S}, \quad V^*(s) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
 
-Proof:
-* Since $(**)$ is valid for any policy, it is valid for an optimal policy. So $V^*(s) = \sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,a)}$. Let $\bar{a}=\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$. Then $\sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,a)} \leq \sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,\bar{a})} = Q^*(s,\bar{a}) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$. Thus $V^*(s) \leq \max_{a\in\mathcal{A}(s)}Q^*(s,a)$.
-* We now prove that $V^*(s) \geq \max_{a\in\mathcal{A}(s)}Q^*(s,a) \; \forall s\in\mathcal{S}$ by contradiction. So assume that $\exists \bar{s}\in\mathcal{S}: \;V^*(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}Q^*(\bar{s},a)$.  
-By our previous lemma, this means that there exists $\pi'$ such that $V^*(\bar{s})<V^{\pi'}(\bar{s})$, which means $\pi^*$ is not optimal $\Rightarrow$ Contradiction.
+*Proof.*
+Since $(**)$ is valid for any policy, it is valid for an optimal policy. So $V^*(s) = \sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,a)}$.  
+Let $\bar{a}=\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$.  
+Then 
+$$\sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,a)} \leq \sum_{a\in\mathcal{A}(s)}{\pi^*(a\mid s)Q^*(s,\bar{a})} = Q^*(s,\bar{a}) = \max_{a\in\mathcal{A}(s)}Q^*(s,a)$$
+Thus $V^*(s) \leq \max_{a\in\mathcal{A}(s)}Q^*(s,a)$.
 
-This is extremely useful, because we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal (1). So computing the optimal Q-values comes back to achieving our goal.  
+We now prove that $V^*(s) \geq \max_{a\in\mathcal{A}(s)}Q^*(s,a) \; \forall s\in\mathcal{S}$ by contradiction.  
+Let's assume that $\exists \bar{s}\in\mathcal{S}: \;V^*(\bar{s}) < \max_{a\in\mathcal{A}(\bar{s})}Q^*(\bar{s},a)$.  
+By our previous lemma, this means that there exists $\pi'$ such that $V^*(\bar{s})<V^{\pi'}(\bar{s})$, which means $\pi^*$ is not optimal $\Rightarrow$ Contradiction.
+$$\phantom{end of proof}\tag*{$\square$}$$
+
+This is extremely useful, because we can concentrate on computing the optimal Q-values to obtain the optimal V-function values, which is exactly our ultimate goal $(1)$. So computing the optimal Q-values comes back to achieving our goal.  
 The whole idea of Q-Learning is learning these optimal Q-values. To put in place our learning framework, we first derive a recursive formula for the optimal Q-function, called the Bellman optimality equation.
 
 Bellman optimality equation for $Q^*$:
@@ -161,7 +180,7 @@ Now we state the theoretical constraints under which Q-Learning converges, which
 
 ### Constraints For Convergence
 
-<ins>Convergence of Q-Learning: </ins> Let $t^{i}(s,a)$ be the timestep of the $i^{\text{th}}$ time that we're in state $s$ and we take action $a$. Let the updates to $\tilde{Q}$ be done as mentioned above. Then, $\tilde{Q}$ converges almost surely towards $Q^*$ as long as
+**Convergence of Q-Learning:** Let $t^{i}(s,a)$ be the timestep of the $i^{\text{th}}$ time that we're in state $s$ and we take action $a$. Let the updates to $\tilde{Q}$ be done as mentioned above. Then, $\tilde{Q}$ converges almost surely towards $Q^*$ as long as
 $$\sum_{i=0}^{\infty}{\alpha_{t^{i}(s,a)}}=\infty \quad\text{and}\quad \sum_{i=0}^{\infty}{\left[\alpha_{t^{i}(s,a)}\right]^2}<\infty\quad\forall s\in\mathcal{S},a\in\mathcal{A}$$
 
 The convergence is almost surely because we have random variables $s_t,s_{t+1}$ and $a_t$.  
@@ -173,7 +192,7 @@ This statement reveals 2 constraints:
 
 Now the idea could be to apply Machine Learning to learn it: we sample a lot of events to adjust and learn each $\tilde{Q}$ so that it is as close as possible to $Q^*$. To do this we don’t need a specific policy, we just need enough exploration and (by the convergence constraints) enough iterations to make the values of $\tilde{Q}$ converge towards $Q^*$.  
 
-But we do Reinforcement Learning, so we also need our agent to get better over experiences. Thus our agent needs to take actions that it thinks are the best according to what it's learned until now. So the agent chooses the actions that maximize $V^*$ for each state, and from the Bellman optimality equation, it chooses $\max_{a} Q^*$.
+But we do Reinforcement Learning, so we also need our agent to get better over experiences. Thus our agent needs to take actions that it thinks are the best according to what it's learned until now. So the agent chooses the actions that maximize $V^*$ for each state, and from the Bellman optimality equation, it chooses $\max_{a} Q^*$ (In fact, the agent chooses $\max_{a} \tilde{Q}$, but $\tilde{Q}$ converges to $Q^*$ so we'll abuse notation here).
 
 To give its best guess, the agent always chooses $\arg\max_{a\in\mathcal{A}(s)}Q^*(s,a)$, so it follows the following policy:
 $$\pi(a\mid s) = \begin{cases}
