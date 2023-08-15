@@ -2,7 +2,7 @@
 * These notes present a [Reinforcement Learning](https://en.wikipedia.org/wiki/Reinforcement_learning) algorithm, namely 
 Q-Learning
 * Having a Probability, Stochastics and Machine Learning foundation is recommended before reading.
-* You do not need to be familiar with Dynamic Programming in the context of Reinforcement Learning.
+* It may be useful to be familiar with Dynamic Programming in the context of Reinforcement Learning.
 
 ## Introduction
 
