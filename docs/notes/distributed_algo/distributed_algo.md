@@ -12,9 +12,30 @@
     * **Perfect Failure Detector:**
         * **PFD1.** Strong Completeness: Eventually, every process that crashes is permanently suspected by every correct process.
         * **PFD2.** Strong accuracy: If a process $p$ is detected by any process, then $p$ has crashed.
+        ```yaml
+        Module:
+            Name: PerfectFailureDetector (P)
+
+        Events:
+            Indication: <crash, p>: indicates that process p has crashed
+
+        Properties:
+            PFD1, PFD2
+        ```
     * **Eventually Perfect Failure Detector:**
         * **EPFD1.** Strong completeness = **PFD1.**
         * **EPFD2.** Eventual Strong Accuracy: Eventually, no correct process is ever suspected by any correct process.
+        ```yaml
+        Module:
+            Name: EventualPerfectFailureDetector (EP)
+
+        Events:
+            Indication: <suspect, p>: suspects that process p has crashed
+            Indication: <restore, p>: restores process p as not crashed
+
+        Properties:
+            EPFD1, EPFD2
+        ```
 
 * **Notation:** Processes are denoted as $p$, $q$, $p_i$, $q_i$. Messages are denoted as $m$, $n$, $m_i$, $n_i$. If a process is correct, then it never crashes.
 
@@ -25,10 +46,47 @@
 * **FLL2.** Finite Duplication: If a correct process $p$ sends message $m$ to $q$ a finite number of times, then $m$ cannot be delivered an infinite number of times by $q$.
 * **FLL3.** No Creation: If some process $q$ delivers message $m$ with sender $p$, then $m$ was sent to $q$ by $p$.
 
+These are assumptions on the network link we are working with. This can be seen as properties coming from UDP. The following gives the interface of the link:
+
+```yaml
+Module:
+    Name: FairLossLink (flp2p)
+
+Events:
+    Request: <flp2pSend, dest, m>: requests to send message m to process dest
+    Indication: <flp2pDeliver, src, m>: delivers messages m sent by src
+
+Properties:
+    FLL1, FLL2, FLL3
+```
+
 ### Stubborn Link (SB) - UDP-like
 
 * **SL1.** Stubborn Delivery: If a correct process $p$ sends a message $m$ once to correct process $q$, then $q$ delivers $m$ an infinite number of times.
 * **SL2.** No Creation: If some process $q$ delivers a message $m$ with sender $p$, then $m$ was previously sent to $q$ by $p$.
+
+```yaml
+Module: 
+    Name: StubbornLink (sp2p)
+Uses:
+    FairLossLink (flp2p)
+
+Events:
+    Request: <sp2pSend, dest, m>: requests to send message m to dest
+    Indication: <sp2pDeliver, src, m>: delivers message m sent by src
+
+Properties:
+    SL1, SL2
+```
+```
+upon event <sp2pSend, dest, m> do:
+    while (true) do:
+        trigger <flp2pSend, dest, m>;
+
+upon event <flp2pDeliver, src, m> do:
+    trigger <sp2pDeliver, src, m>;
+```
+Note that in the above, although the algorithm sends each message an infinite number of times and practically this is extremely inefficient, it still satisfies the properties defined above, so the algorithm is correct. Remember that we concentrate on the existence of algorithms satisfying our properties, not on their performance.
 
 ### Perfect Link (PL) - TCP-like
 
@@ -36,12 +94,60 @@
 * **PL2.** No Duplication: No message is delivered by a process more than once.
 * **PL3.** No Creation: If some process $q$ delivers a message $m$ with sender $p$, then $m$ was previously sent to $q$ by $p$.
 
+```yaml
+Module: 
+    Name: PerfectLink (pp2p)
+Uses:
+    StubbornLink (sp2p)
+
+Events:
+    Request: <pp2pSend, dest, m>: requests to send message m to dest
+    Indication: <pp2pDeliver, src, m>: delivers message m sent by src
+
+Properties:
+    PL1, PL2, PL3
+```
+```
+upon event <pp2p, Init> do:
+    delivered := ∅;
+
+upon event <pp2pSend, dest, m> do:
+    trigger <sp2pSend, dest, m>;
+
+upon event <sp2pDeliver, src, m> do:
+    if m ∉ delivered:
+        delivered := delivered ∪ {m};
+        trigger <pp2pDeliver, src, m>;
+```
+
 ## Broadcasts
 ### Best-Effort Broadcast (BEB)
 
 * **BEB1.** Validity: If $p$ and $q$ are correct, then every message broadcast by $p$ is eventually delivered by $q$
 * **BEB2.** No Duplication: No message is delivered more than once.
 * **BEB3.** No Creation: If a process delivers a message $m$ with sender $p$, then $m$ was previously broadcast by $p$.
+
+```yaml
+Module: 
+    Name: BestEffortBroadcast (beb)
+Uses: 
+    PerfectLink (pp2p)
+
+Events:
+    Request: <bebBroadcast, m>: broadcasts a message m to all processes
+    Indication: <bebDeliver, src, m>: delivers a message m sent by src
+
+Properties:
+    BEB1, BEB2, BEB3
+```
+```
+upon event <bebBroadcast, m> do:
+    forall q ∈ Π do:
+        trigger <pp2pSend, q, m>;
+
+upon event <pp2pDeliver, src, m> do:
+    trigger <bebDeliver, src, m>;
+```
 
 ### Reliable Broadcast (RB)
 
