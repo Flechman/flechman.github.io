@@ -1,0 +1,1 @@
+const e={key:"v-7eb0d35e",path:"/perenoel2023.html",title:"",lang:"en-US",frontmatter:{},excerpt:"",headers:[{level:2,title:"Ma liste au P\xE8re No\xEBl 2023",slug:"ma-liste-au-pere-noel-2023",children:[]}],git:{updatedTime:1701974202e3},filePathRelative:"perenoel2023.md"};export{e as data};
