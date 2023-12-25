@@ -12,7 +12,7 @@
     * **Perfect Failure Detector:**
         * **PFD1.** Strong Completeness: Eventually, every process that crashes is permanently suspected by every correct process.
         * **PFD2.** Strong accuracy: If a process $p$ is detected by any process, then $p$ has crashed.
-        ```yaml
+        ```da-pseudocode
         Module:
             Name: PerfectFailureDetector (P)
 
