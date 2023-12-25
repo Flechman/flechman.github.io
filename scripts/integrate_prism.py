@@ -1,7 +1,10 @@
 import json
 import shutil
+import os
 
 # Copy the prism-da-pseudocode.js inside the "components" folder of the prism package
+print(os.getcwd())
+print(os.path.abspath(os.path.join(os.getcwd(), os.pardir)))
 shutil.copyfile("../docs/.vuepress/components/prism/prism-da-pseudocode.js", "../node_modules/prismjs/components/prism-da-pseudocode.js")
 
 # Edit components.json of the prism package, add the following to the "languages" object:
