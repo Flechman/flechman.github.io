@@ -15,3 +15,5 @@ with open(os.getcwd()+"/node_modules/prismjs/components.json", 'r+') as f:
     f.seek(0) # reset file position to the beginning.
     json.dump(components, f, sort_keys=True, indent=4)
     f.truncate() # remove remaining parts
+
+os.remove(os.getcwd()+"/node_modules/prismjs/components/prism-yaml.min.js")
