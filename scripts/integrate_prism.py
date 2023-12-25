@@ -11,7 +11,7 @@ print("-> Edit "+os.getcwd()+"/node_modules/prismjs/components.json"+" to add la
 with open(os.getcwd()+"/node_modules/prismjs/components.json", 'r+') as f:
     components = json.load(f)
     if "da-pseudocode" not in components["languages"]:
-        components["languages"]["da-pseudocode"] = {"title": "Distributed Algo Pseudocode", "owner": "Flechman"}
+        components["languages"]["da-pseudocode"] = {"title": "Distributed Algo Pseudocode", "alias": "da-pseudocode", "owner": "Flechman"}
     f.seek(0) # reset file position to the beginning.
     json.dump(components, f, indent=4)
     f.truncate() # remove remaining parts
