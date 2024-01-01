@@ -7,4 +7,5 @@ References for building this site:
 * [Site-related configuration, also in config.js](https://v2.vuepress.vuejs.org/reference/config.html)
 
 Useful commands:
+* To install the required library dependencies (see the package.json file): `yarn install`
 * To launch the website locally: `yarn dev`
