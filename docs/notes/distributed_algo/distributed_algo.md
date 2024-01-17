@@ -1,4 +1,4 @@
-# Distributed Algorithms
+# Distributed Algorithms (Work In Progress...)
 * These notes are not lecture notes!
 * They are notes that summarize the specifications, properties and pseudo-code of the main distributed algorithms used in industry, from a theoretical point of view (we look at the existence of these algorithms, not their efficiency).
 * These notes may help in developping the building blocks of communication in a distributed system.
@@ -12,7 +12,7 @@
     * **Perfect Failure Detector:**
         * **PFD1.** Strong Completeness: Eventually, every process that crashes is permanently suspected by every correct process.
         * **PFD2.** Strong accuracy: If a process $p$ is detected by any process, then $p$ has crashed.
-        ```da-pseudocode
+        ```yaml
         Module:
             Name: PerfectFailureDetector (P)
 
@@ -107,7 +107,7 @@ Events:
 Properties:
     PL1, PL2, PL3
 ```
-```
+```yaml
 upon event <pp2p, Init> do:
     delivered := ∅;
 
@@ -140,7 +140,7 @@ Events:
 Properties:
     BEB1, BEB2, BEB3
 ```
-```
+```yaml
 upon event <bebBroadcast, m> do:
     forall q ∈ Π do:
         trigger <pp2pSend, q, m>;
