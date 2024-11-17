@@ -9,8 +9,8 @@
     </div>
     <div class="presentation">
         <p style="text-align: center;">
-            Hi! My name is Rémi Delacourt, I'm a final year CS Master's student at EPFL in Lausanne, Switzerland. At the moment, my main focus is on Systems for Machine Learning, more specifically LLM Serving Systems. I aim at serving LLMs faster and with less resources. This is an exciting topic, as the algorithmic and systems sides are very tied together!
-            If you want to discuss, I'd be happy to exchange on current, new, or upcoming technologies and their impact on the word with you! You can shoot me an email at <a href = "mailto: remi.delacourt@gmail.com">remi.delacourt@gmail.com</a> anytime.
+            Hi! My name is Rémi Delacourt, I'm a Research Engineer at Mistral AI in Paris, France. At the moment, my main focus is on Systems for Machine Learning, more specifically LLM Serving Systems. I aim to serve LLMs faster and with fewer resources. This is an exciting topic, as the algorithmic and systems sides are tied together!
+            If you want to discuss, I'd be happy to exchange on current, new, or upcoming technologies and their impact on the world with you! You can shoot me an email at <a href = "mailto: remi.delacourt@gmail.com">remi.delacourt@gmail.com</a> anytime.
         </p>
     </div>
     <div style="height: 2vh;"></div>
