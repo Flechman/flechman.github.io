@@ -623,10 +623,10 @@ This first requires to define what object we're looking for.
 
 <u>*Universality:*</u> An object T is *universal* if, together with registers, instances of T can be used to provide a wait-free linearizable implementation of any other object T'.  
 
-In the previous section we proved that in our concurrent context Consensus is impossible to implement using only registers. But we can ask ourselves, if we are able to implement Consensus, would there still be any object that would be impossible to implement in our concurrent context ? The answer is in fact no. Consensus is the strongest possible object in our concurrent context, and so Consensus is universal.  
+In the previous section we proved that in our concurrent context Consensus is impossible to implement using only registers. But we can ask ourselves, if we are able to implement Consensus, would there still be any object that would be impossible to implement in our concurrent context? The answer is in fact no. Consensus is the strongest possible object in our concurrent context, and so Consensus is universal.  
 In this section, we demonstrate the power of Consensus in implementing any wait-free atomic object. To this end, we implement an algorithm that builds any wait-free atomic object T', using only registers and instances of Consensus. 
 
-*Before we continue, note that since Consensus is universal, then every objects that we presented in the previous section (Fetch&Inc, Compare&Swap, ...) are universal.*  
+*Before we continue, note that since Consensus is universal, then Compare&Swap is universal and Test&Set is universal only in a system of 2 processes.*  
 
 ### 5.1 Deterministic case
 
