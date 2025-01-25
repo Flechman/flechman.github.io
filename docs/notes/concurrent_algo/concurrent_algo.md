@@ -1092,7 +1092,7 @@ int wInc() {
 ```
 
 The above implementation is *lock-free*, meaning that if multiple processes increment concurrently, at least one of them eventually succeeds and returns (there is progress). But a slow process may never terminate, it keeps incrementing because another fast process keeps incrementing.  
-If we want to get that all concurrent inrements eventually succeed, we need to be smarter.
+If we want to get that all concurrent increments eventually succeed, we need to be smarter.
 
 #### 8.1.2 Wait-Free Implementation
 
