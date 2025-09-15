@@ -3,7 +3,7 @@
 * [Concurrent Algorithms](concurrent_algo/concurrent_algo.md)
 * Distributed Algorithms (Work in progress...)
 
-* [Improving Large Language Model Inference Throughput With Speculative Decoding](master_thesis/master_thesis.md)
+* Speculative Decoding For faster Large Language Model Inference
 
 * [Interior Point Methods](IPM/ipm.md)
 * [IPM Part 2: The Lee-Sidford Barrier](IPM_lee_sidford/ipm_lee_sidford.md)
